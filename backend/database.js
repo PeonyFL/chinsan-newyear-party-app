@@ -9,8 +9,9 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
         throw err;
     } else {
         console.log('Connected to the SQLite database.');
-
+        // เปิดใช้งานโหมด Write-Ahead Logging เพื่อประสิทธิภาพที่ดีขึ้นและลดการ lock ฐานข้อมูล
         db.exec('PRAGMA journal_mode = WAL;');
+
         // สร้างตาราง employees หากยังไม่มี
         db.run(`CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

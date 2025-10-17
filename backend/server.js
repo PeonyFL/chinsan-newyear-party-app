@@ -12,16 +12,13 @@ app.use(express.json());
 // --- Endpoint สำหรับการลงทะเบียน ---
 app.post('/register', async (req, res) => {
     const { firstName, lastName } = req.body;
-    // แปลงรหัสพนักงานเป็นตัวพิมพ์ใหญ่เสมอ
     const employeeId = req.body.employeeId.toUpperCase();
 
     if (!firstName || !lastName || !employeeId) {
         return res.status(400).json({ "error": "กรุณากรอกข้อมูลให้ครบทุกช่อง" });
     }
-
     const sql = 'INSERT INTO employees (first_name, last_name, employee_id) VALUES (?,?,?)';
     const params = [firstName, lastName, employeeId];
-
     db.run(sql, params, async function (err) {
         if (err) {
             if (err.message.includes('UNIQUE constraint failed')) {
@@ -45,14 +42,10 @@ app.post('/register', async (req, res) => {
 
 // --- Endpoint สำหรับค้นหา QR Code ---
 app.get('/find/:employeeId', (req, res) => {
-    // แปลงรหัสพนักงานที่ใช้ค้นหาเป็นตัวพิมพ์ใหญ่
     const employeeId = req.params.employeeId.toUpperCase();
     const sql = "SELECT * FROM employees WHERE employee_id = ?";
-
     db.get(sql, [employeeId], async (err, row) => {
-        if (err) {
-            return res.status(500).json({ "error": err.message });
-        }
+        if (err) { return res.status(500).json({ "error": err.message }); }
         if (row) {
             try {
                 const options = { width: 350, margin: 1 };
@@ -75,14 +68,26 @@ app.get('/find/:employeeId', (req, res) => {
 app.get('/employees', (req, res) => {
     const sql = "SELECT id, first_name, last_name, employee_id, registration_time FROM employees ORDER BY registration_time DESC";
     db.all(sql, [], (err, rows) => {
-        if (err) {
-            res.status(500).json({ "error": err.message });
-            return;
+        if (err) { res.status(500).json({ "error": err.message }); return; }
+        res.status(200).json({ "message": "success", "data": rows });
+    });
+});
+
+// --- Endpoint สำหรับสุ่มรางวัล ---
+app.get('/draw', (req, res) => {
+    const sql = "SELECT id, first_name, last_name, employee_id FROM employees";
+    const numberOfWinners = 5;
+    db.all(sql, [], (err, rows) => {
+        if (err) { return res.status(500).json({ "error": err.message }); }
+        if (rows.length < numberOfWinners) {
+            return res.status(400).json({ "error": `มีผู้ลงทะเบียนน้อยกว่า ${numberOfWinners} คน ไม่สามารถสุ่มรางวัลได้` });
         }
-        res.status(200).json({
-            "message": "success",
-            "data": rows
-        });
+        for (let i = rows.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [rows[i], rows[j]] = [rows[j], rows[i]];
+        }
+        const winners = rows.slice(0, numberOfWinners);
+        res.status(200).json({ "message": "success", "data": winners });
     });
 });
 
@@ -91,27 +96,19 @@ app.get('/employees', (req, res) => {
 const SECRET_KEY = "YourSuperSecretPassword12345"; // !!! เปลี่ยนเป็นรหัสผ่านของคุณเองที่เดายากๆ !!!
 
 app.get('/admin/view-all', (req, res) => {
-    if (req.query.key !== SECRET_KEY) {
-        return res.status(401).json({ "error": "Unauthorized" });
-    }
+    if (req.query.key !== SECRET_KEY) { return res.status(401).json({ "error": "Unauthorized" }); }
     const sql = "SELECT * FROM employees ORDER BY registration_time DESC";
     db.all(sql, [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ "error": err.message });
-        }
+        if (err) { return res.status(500).json({ "error": err.message }); }
         res.status(200).json(rows);
     });
 });
 
 app.get('/admin/delete/:id', (req, res) => {
-    if (req.query.key !== SECRET_KEY) {
-        return res.status(401).json({ "error": "Unauthorized" });
-    }
+    if (req.query.key !== SECRET_KEY) { return res.status(401).json({ "error": "Unauthorized" }); }
     const sql = "DELETE FROM employees WHERE id = ?";
     db.run(sql, [req.params.id], function(err) {
-        if (err) {
-            return res.status(500).json({ "error": err.message });
-        }
+        if (err) { return res.status(500).json({ "error": err.message }); }
         res.status(200).json({ "message": "Success", "deletedRows": this.changes });
     });
 });
