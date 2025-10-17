@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนเข้าร่วมงานปีใหม่ 2568</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <div id="main-sections">
+            <div id="registration-section">
+                <h1>ลงทะเบียนเข้าร่วมงานปีใหม่</h1>
+                <p>กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน</p>
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label for="firstName">ชื่อจริง</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">นามสกุล</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employeeId">รหัสพนักงาน</label>
+                        <input type="text" id="employeeId" name="employeeId" required>
+                    </div>
+                    <button type="submit" id="submitBtn">ลงทะเบียน</button>
+                </form>
+                <a href="#" id="showFindFormLink" class="toggle-link">ลืม QR Code? / ค้นหา QR Code</a>
+            </div>
+
+            <div id="find-section" class="hidden">
+                <h1>ค้นหา QR Code</h1>
+                <p>กรอกรหัสพนักงานเพื่อค้นหา QR Code ของคุณ</p>
+                <form id="findForm">
+                    <div class="form-group">
+                        <label for="findEmployeeId">รหัสพนักงาน</label>
+                        <input type="text" id="findEmployeeId" name="findEmployeeId" required>
+                    </div>
+                    <button type="submit" id="findBtn">ค้นหา</button>
+                </form>
+                <a href="#" id="showRegisterFormLink" class="toggle-link">กลับไปหน้าลงทะเบียน</a>
+            </div>
+
+            <div class="view-employees-container">
+                 <button type="button" id="viewEmployeesBtn">ดูรายชื่อผู้ลงทะเบียน</button>
+            </div>
+        </div>
+
+        <div id="result" class="hidden">
+            <h2 id="resultMessage"></h2>
+            <div id="qrCodeContainer"></div>
+            <p>กรุณาบันทึก QR Code นี้ไว้สำหรับสแกนเข้างาน</p>
+            <button type="button" id="backToFormBtn">กลับไปหน้าหลัก</button>
+        </div>
+
+        <div id="employee-list-section" class="hidden">
+            <h1>รายชื่อผู้ลงทะเบียน</h1>
+            <div id="employeeTableContainer"></div>
+            <button type="button" id="backFromListBtn">กลับไปหน้าหลัก</button>
+        </div>
+
+        <div id="error" class="hidden">
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
