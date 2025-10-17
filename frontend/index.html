@@ -13,155 +13,84 @@
     <div class="container my-5">
         <div class="card shadow-sm p-4 p-md-5 mx-auto" style="max-width: 500px;" id="main-card">
 
-            <div id="main-sections">
-                <div id="registration-section">
+            <div id="role-selection-section">
+                <h1 class="h3 mb-4 fw-bold text-center">กรุณาระบุประเภท</h1>
+                <div class="d-grid gap-3">
+                    <button id="select-employee-btn" class="btn btn-primary btn-lg">พนักงาน</button>
+                    <button id="select-admin-btn" class="btn btn-secondary btn-lg">Admin</button>
+                </div>
+            </div>
+
+            <div id="app-sections" class="d-none">
+                <div id="main-header-container">
                     <h1 class="h3 mb-3 fw-bold text-center">ลงทะเบียนเข้าร่วมงานปีใหม่</h1>
                     <p class="text-muted text-center mb-4">กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน</p>
+                </div>
+
+                <div id="registration-section" class="d-none">
                     <form id="registrationForm">
-                        <div class="mb-3">
-                            <label for="firstName" class="form-label">ชื่อจริง</label>
-                            <input type="text" class="form-control" id="firstName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="lastName" class="form-label">นามสกุล</label>
-                            <input type="text" class="form-control" id="lastName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="employeeId" class="form-label">รหัสพนักงาน</label>
-                            <input type="text" class="form-control" id="employeeId" required>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">ลงทะเบียน</button>
-                        </div>
+                        <div class="mb-3"><label for="firstName" class="form-label">ชื่อจริง</label><input type="text" class="form-control" id="firstName" required></div>
+                        <div class="mb-3"><label for="lastName" class="form-label">นามสกุล</label><input type="text" class="form-control" id="lastName" required></div>
+                        <div class="mb-3"><label for="employeeId" class="form-label">รหัสพนักงาน</label><input type="text" class="form-control" id="employeeId" required></div>
+                        <div class="d-grid"><button type="submit" class="btn btn-primary btn-lg">ลงทะเบียน</button></div>
                     </form>
-                    <div class="text-center mt-3">
-                        <a href="#" id="showFindFormLink">ลืม QR Code? / ค้นหา QR Code</a>
+                    <div class="text-center mt-3"><a href="#" id="showFindFormLink">ลืม QR Code? / ค้นหา QR Code</a></div>
+                    
+                    <div id="admin-actions-container" class="mt-4 pt-4 border-top d-flex flex-wrap justify-content-center gap-2">
+                        <button type="button" id="viewEmployeesBtn" class="btn btn-info">ดูรายชื่อ</button>
+                        <button type="button" id="showDrawPageBtn" class="btn btn-success">สุ่มรางวัล</button>
+                        <button type="button" id="showCheckinPageBtn" class="btn btn-warning">เช็คอิน</button>
+                        <button type="button" id="showVotePageBtn" class="btn btn-danger">โหวต</button>
                     </div>
                 </div>
 
                 <div id="find-section" class="d-none">
-                    <h1 class="h3 mb-3 fw-bold text-center">ค้นหา QR Code</h1>
-                    <p class="text-muted text-center mb-4">กรอกรหัสพนักงานเพื่อค้นหา QR Code</p>
                     <form id="findForm">
-                        <div class="mb-3">
-                            <label for="findEmployeeId" class="form-label">รหัสพนักงาน</label>
-                            <input type="text" class="form-control" id="findEmployeeId" required>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">ค้นหา</button>
-                        </div>
+                        <div class="mb-3"><label for="findEmployeeId" class="form-label">รหัสพนักงาน</label><input type="text" class="form-control" id="findEmployeeId" required></div>
+                        <div class="d-grid"><button type="submit" class="btn btn-primary btn-lg">ค้นหา</button></div>
                     </form>
-                    <div class="text-center mt-3">
-                        <a href="#" id="showRegisterFormLink">กลับไปหน้าลงทะเบียน</a>
-                    </div>
+                    <div class="text-center mt-3"><a href="#" id="showRegisterFormLink">กลับไปหน้าลงทะเบียน</a></div>
                 </div>
 
-                <div class="mt-4 pt-4 border-top d-grid gap-3">
-                    <button type="button" id="viewEmployeesBtn" class="btn btn-info">ดูรายชื่อผู้ลงทะเบียน</button>
-                    <button type="button" id="showDrawPageBtn" class="btn btn-success">สุ่มรางวัลผู้โชคดี</button>
-                    <button type="button" id="showCheckinPageBtn" class="btn btn-warning">ตรวจสอบผู้เข้าร่วมงาน</button>
+                <div id="result" class="text-center d-none"> <h2 id="resultMessage" class="h4 text-success"></h2> <div id="qrCodeContainer" class="my-3"></div> <p class="text-muted">กรุณาบันทึก QR Code นี้ไว้สำหรับสแกนเข้างาน</p> <div class="d-grid"> <button type="button" id="backToFormBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button> </div> </div>
+                <div id="employee-list-section" class="d-none"> <div class="d-flex justify-content-between align-items-center"> <h1 class="h3 mb-0 fw-bold">รายชื่อผู้ลงทะเบียน</h1> <span id="employee-count-badge" class="badge bg-secondary rounded-pill"></span> </div> <div id="employeeTableContainer" class="table-responsive mt-3"></div> <div class="d-grid mt-3"> <button type="button" id="backFromListBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button> </div> </div>
+                <div id="draw-section" class="d-none text-center"> <div id="draw-setup"> <h1 class="h3 mb-3 fw-bold">จับรางวัลผู้โชคดี</h1> <div class="card mb-4"> <div class="card-body"> <h5 class="card-title">ของรางวัล 5 รายการ</h5> <ol class="list-group list-group-flush list-group-numbered" reversed id="prize-display-list"> <li class="list-group-item">รางวัลที่ 5: บัตรกำนัล 2,000 บาท</li> <li class="list-group-item">รางวัลที่ 4: พัดลมไอน้ำ</li> <li class="list-group-item">รางวัลที่ 3: Smart TV 55 นิ้ว</li> <li class="list-group-item">รางวัลที่ 2: ทองคำ 1 บาท</li> <li class="list-group-item">รางวัลที่ 1: iPhone 16</li> </ol> </div> </div> <div class="d-grid"> <button type="button" id="startDrawBtn" class="btn btn-success btn-lg">เริ่มการสุ่ม!</button> </div> </div> <div id="draw-animation-area" class="d-none"> <div class="mb-3"> <p class="mb-1 text-muted">กำลังสุ่มรางวัล:</p> <h2 id="current-prize-drawing" class="h5 text-danger"></h2> </div> <div class="slot-machine bg-dark text-white rounded p-4 mb-3"> <p id="slot-name" class="display-6 fw-bold text-warning">ชื่อ-นามสกุล</p> <p id="slot-id" class="text-light">รหัสพนักงาน</p> </div> <div id="draw-controls" class="d-grid gap-2"> <button type="button" id="drawNextBtn" class="btn btn-success btn-lg">สุ่มรางวัลถัดไป!</button> <button type="button" id="resetDrawBtn" class="btn btn-secondary d-none">เริ่มการสุ่มใหม่</button> </div> </div> <div id="winnersListContainer" class="d-none mt-4 text-start"> <h2 class="h4">🎉 รายชื่อผู้โชคดี 🎉</h2> <ol class="list-group list-group-numbered" reversed id="winnersList"></ol> </div> <div class="d-grid mt-3"> <button type="button" id="backFromDrawBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button> </div> </div>
+                <div id="checkin-section" class="d-none"> <h1 class="h3 mb-3 fw-bold">ตรวจสอบผู้เข้าร่วมงาน</h1> <form id="checkinForm"> <div class="mb-3"> <label for="checkinEmployeeId" class="form-label">กรอกรหัสพนักงาน</label> <input type="text" class="form-control" id="checkinEmployeeId" required> </div> <div class="d-grid"> <button type="submit" class="btn btn-primary">ตรวจสอบ</button> </div> </form> <div id="checkinResultContainer" class="d-none mt-4"></div> <div class="d-grid mt-3"> <button type="button" id="backFromCheckinBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button> </div> </div>
+                <div id="vote-section" class="d-none"> <h1 class="h3 mb-3 fw-bold">โหวตการประกวด</h1> <p class="text-muted">กรอกรหัสพนักงานของคุณ และเลือกผู้เข้าประกวดที่คุณชื่นชอบ (โหวตได้ 1 ครั้งเท่านั้น)</p> <form id="voteForm"> <div class="mb-3"> <label for="voteEmployeeId" class="form-label">รหัสพนักงานของคุณ</label> <input type="text" class="form-control" id="voteEmployeeId" required> </div> <div id="candidate-list" class="mb-4"></div> <div class="d-grid"> <button type="submit" class="btn btn-danger btn-lg">ส่งคะแนนโหวต</button> </div> </form> <hr class="my-4"> <div class="d-grid"> <button type="button" id="viewVoteResultsBtn" class="btn btn-outline-secondary">ดูผลโหวตล่าสุด</button> </div> <div id="vote-results-container" class="mt-4 d-none text-start"> <h2 class="h4">ผลโหวตล่าสุด</h2> <ul id="vote-results-list" class="list-group"></ul> </div> <div class="d-grid mt-3"> <button type="button" id="backFromVoteBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button> </div> </div>
+
+                <div id="error-toast" class="toast-container position-fixed bottom-0 end-0 p-3">
+                    <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-danger text-white"><strong class="me-auto">เกิดข้อผิดพลาด</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button></div>
+                        <div class="toast-body" id="errorMessage"></div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div id="result" class="text-center d-none">
-                <h2 id="resultMessage" class="h4 text-success"></h2>
-                <div id="qrCodeContainer" class="my-3"></div>
-                <p class="text-muted">กรุณาบันทึก QR Code นี้ไว้สำหรับสแกนเข้างาน</p>
-                <div class="d-grid">
-                    <button type="button" id="backToFormBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button>
+    <div class="modal fade" id="adminPasswordModal" tabindex="-1" aria-labelledby="adminPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adminPasswordModalLabel">สำหรับ Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-
-            <div id="employee-list-section" class="d-none">
-                <h1 class="h3 mb-3 fw-bold">รายชื่อผู้ลงทะเบียน</h1>
-                <div id="employeeTableContainer" class="table-responsive"></div>
-                <div class="d-grid mt-3">
-                    <button type="button" id="backFromListBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button>
+                <div class="modal-body">
+                    <form id="adminPasswordForm">
+                        <div class="mb-3">
+                            <label for="admin-password-input" class="form-label">กรุณากรอกรหัสผ่าน</label>
+                            <input type="password" class="form-control" id="admin-password-input" required>
+                        </div>
+                        <div id="admin-password-error" class="text-danger mb-3"></div>
+                        <button type="submit" class="btn btn-primary w-100">เข้าสู่ระบบ</button>
+                    </form>
                 </div>
-            </div>
-            
-            <div id="draw-section" class="d-none text-center">
-                <h1 class="h3 mb-4 mt-3 fw-bold">จับรางวัลผู้โชคดี</h1>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">ของรางวัล 5 รายการ</h5>
-                        <ol class="list-group list-group-flush list-group-numbered" reversed id="prize-display-list">
-                            <li class="list-group-item">รางวัลที่ 5: บัตรกำนัล 2,000 บาท</li>
-                            <li class="list-group-item">รางวัลที่ 4: พัดลมไอน้ำ</li>
-                            <li class="list-group-item">รางวัลที่ 3: Smart TV 55 นิ้ว</li>
-                            <li class="list-group-item">รางวัลที่ 2: ทองคำ 1 บาท</li>
-                            <li class="list-group-item">รางวัลที่ 1: iPhone 16</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <div id="draw-animation-area" class="d-none">
-                    <div class="mb-3">
-                        <p class="mb-1 text-muted">กำลังสุ่มรางวัล:</p>
-                        <h2 id="current-prize-drawing" class="h5 text-danger"></h2>
-                    </div>
-                    <div class="slot-machine bg-dark text-white rounded p-4 mb-3">
-                        <p id="slot-name" class="display-6 fw-bold text-warning">ชื่อ-นามสกุล</p>
-                        <p id="slot-id" class="text-light">รหัสพนักงาน</p>
-                    </div>
-                    <div id="draw-controls" class="d-grid gap-2">
-                        <button type="button" id="drawNextBtn" class="btn btn-success btn-lg">สุ่มรางวัลถัดไป!</button>
-                        <button type="button" id="resetDrawBtn" class="btn btn-secondary d-none">เริ่มการสุ่มใหม่</button>
-                    </div>
-                </div>
-
-                <div id="winnersListContainer" class="d-none mt-4 text-start">
-                    <h2 class="h4">🎉 รายชื่อผู้โชคดี 🎉</h2>
-                    <ol class="list-group list-group-numbered" reversed id="winnersList"></ol>
-                </div>
-                <div class="d-grid mt-3">
-                    <button type="button" id="backFromDrawBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button>
-                </div>
-            </div>
-
-            <div id="checkin-section" class="d-none">
-                <h1 class="h3 mb-3 mt-3 fw-bold">ตรวจสอบผู้เข้าร่วมงาน</h1>
-                <form id="checkinForm">
-                    <div class="mb-3">
-                        <label for="checkinEmployeeId" class="form-label">กรอกรหัสพนักงาน</label>
-                        <input type="text" class="form-control" id="checkinEmployeeId" required>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">ตรวจสอบ</button>
-                    </div>
-                </form>
-                <div id="checkinResultContainer" class="d-none mt-4"></div>
-                <div class="d-grid mt-3">
-                    <button type="button" id="backFromCheckinBtn" class="btn btn-secondary">กลับไปหน้าหลัก</button>
-                </div>
-            </div>
-
-            <div id="error" class="alert alert-danger d-none mt-3" role="alert">
-                <p id="errorMessage" class="mb-0"></p>
             </div>
         </div>
     </div>
 
     <div class="modal fade" id="winnerModal" tabindex="-1" aria-labelledby="winnerModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content text-center">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title w-100" id="winnerModalLabel">🎉 ขอแสดงความยินดี! 🎉</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <p class="lead">ผู้โชคดีที่ได้รับรางวัล</p>
-                    <p id="modal-prize-name" class="h5 text-danger fw-bold"></p>
-                    <div class="winner-announcement bg-light p-3 rounded mt-3">
-                        <p id="modal-winner-name" class="display-6 text-primary fw-bold mb-0"></p>
-                        <p id="modal-winner-id" class="text-muted"></p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">ปิด</button>
-                </div>
-            </div>
-        </div>
+        <div class="modal-dialog modal-dialog-centered"> <div class="modal-content text-center"> <div class="modal-header bg-success text-white"> <h5 class="modal-title w-100" id="winnerModalLabel">🎉 ขอแสดงความยินดี! 🎉</h5> <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> </div> <div class="modal-body p-4"> <p class="lead">ผู้โชคดีที่ได้รับรางวัล</p> <p id="modal-prize-name" class="h5 text-danger fw-bold"></p> <div class="winner-announcement bg-light p-3 rounded mt-3"> <p id="modal-winner-name" class="display-6 text-primary fw-bold mb-0"></p> <p id="modal-winner-id" class="text-muted"></p> </div> </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">ปิด</button> </div> </div> </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

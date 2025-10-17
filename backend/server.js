@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // --- Endpoint สำหรับการลงทะเบียน ---
-app.post('/register', async (req, res) => {
+app.post('/register', (req, res) => {
     const { firstName, lastName } = req.body;
     const employeeId = req.body.employeeId.toUpperCase();
 
@@ -27,37 +27,32 @@ app.post('/register', async (req, res) => {
             return res.status(500).json({ "error": err.message });
         }
         try {
-            const options = { width: 350, margin: 1 };
-            const qrCodeDataUrl = await qrcode.toDataURL(employeeId, options);
+            const qrCodeDataUrl = await qrcode.toDataURL(employeeId, { width: 350, margin: 1 });
             res.status(201).json({
                 "message": "ลงทะเบียนสำเร็จ!",
                 "data": { "id": this.lastID, "firstName": firstName, "lastName": lastName, "employeeId": employeeId, "qrCode": qrCodeDataUrl }
             });
         } catch (qrErr) {
-            console.error('QR Code generation failed:', qrErr);
             return res.status(500).json({ "error": "ไม่สามารถสร้าง QR Code ได้" });
         }
     });
 });
 
-// --- Endpoint สำหรับค้นหา QR Code ---
+// --- Endpoint สำหรับค้นหา/ตรวจสอบ ---
 app.get('/find/:employeeId', (req, res) => {
     const employeeId = req.params.employeeId.toUpperCase();
     const sql = "SELECT * FROM employees WHERE employee_id = ?";
-    db.get(sql, [employeeId], async (err, row) => {
+    db.get(sql, [employeeId], (err, row) => {
         if (err) { return res.status(500).json({ "error": err.message }); }
         if (row) {
-            try {
-                const options = { width: 350, margin: 1 };
-                const qrCodeDataUrl = await qrcode.toDataURL(row.employee_id, options);
-                res.status(200).json({
-                    "message": "พบข้อมูลของคุณแล้ว",
-                    "data": { "id": row.id, "firstName": row.first_name, "lastName": row.last_name, "employeeId": row.employee_id, "qrCode": qrCodeDataUrl }
-                });
-            } catch (qrErr) {
-                console.error('QR Code generation failed:', qrErr);
-                return res.status(500).json({ "error": "ไม่สามารถสร้าง QR Code ได้" });
-            }
+            res.status(200).json({
+                "message": "พบข้อมูลของคุณแล้ว",
+                "data": { 
+                    "firstName": row.first_name, 
+                    "lastName": row.last_name, 
+                    "employeeId": row.employee_id
+                }
+            });
         } else {
             return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้ในระบบ" });
         }
@@ -66,7 +61,7 @@ app.get('/find/:employeeId', (req, res) => {
 
 // --- Endpoint สำหรับดูรายชื่อทั้งหมด ---
 app.get('/employees', (req, res) => {
-    const sql = "SELECT id, first_name, last_name, employee_id, registration_time FROM employees ORDER BY registration_time DESC";
+    const sql = "SELECT id, first_name, last_name, employee_id, registration_time, checked_in, checkin_time FROM employees ORDER BY registration_time DESC";
     db.all(sql, [], (err, rows) => {
         if (err) { res.status(500).json({ "error": err.message }); return; }
         res.status(200).json({ "message": "success", "data": rows });
@@ -75,12 +70,12 @@ app.get('/employees', (req, res) => {
 
 // --- Endpoint สำหรับสุ่มรางวัล ---
 app.get('/draw', (req, res) => {
-    const sql = "SELECT id, first_name, last_name, employee_id FROM employees";
+    const sql = "SELECT id, first_name, last_name, employee_id FROM employees where checked_in = 1";
     const numberOfWinners = 5;
     db.all(sql, [], (err, rows) => {
         if (err) { return res.status(500).json({ "error": err.message }); }
         if (rows.length < numberOfWinners) {
-            return res.status(400).json({ "error": `มีผู้ลงทะเบียนน้อยกว่า ${numberOfWinners} คน ไม่สามารถสุ่มรางวัลได้` });
+            return res.status(400).json({ "error": `มีผู้ลงทะเบียนน้อยกว่า ${numberOfWinners} คน` });
         }
         for (let i = rows.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -91,25 +86,76 @@ app.get('/draw', (req, res) => {
     });
 });
 
+// --- Endpoint สำหรับ Check-in ---
+app.post('/checkin', (req, res) => {
+    const { employeeId } = req.body;
+    if (!employeeId) { return res.status(400).json({ "error": "กรุณากรอกรหัสพนักงาน" }); }
 
-// --- Admin Endpoints ---
-const SECRET_KEY = "YourSuperSecretPassword12345"; // !!! เปลี่ยนเป็นรหัสผ่านของคุณเองที่เดายากๆ !!!
+    const employeeIdUpper = employeeId.toUpperCase();
+    const sql = "SELECT * FROM employees WHERE employee_id = ?";
 
-app.get('/admin/view-all', (req, res) => {
-    if (req.query.key !== SECRET_KEY) { return res.status(401).json({ "error": "Unauthorized" }); }
-    const sql = "SELECT * FROM employees ORDER BY registration_time DESC";
-    db.all(sql, [], (err, rows) => {
+    db.get(sql, [employeeIdUpper], (err, row) => {
         if (err) { return res.status(500).json({ "error": err.message }); }
-        res.status(200).json(rows);
+        if (!row) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้ในระบบ" }); }
+        if (row.checked_in) {
+            return res.status(409).json({ 
+                "error": "พนักงานคนนี้เช็คอินไปแล้ว",
+                "data": {
+                    "firstName": row.first_name, "lastName": row.last_name,
+                    "employeeId": row.employee_id, "checkin_time": row.checkin_time
+                }
+            });
+        }
+        const updateSql = `UPDATE employees SET checked_in = 1, checkin_time = CURRENT_TIMESTAMP WHERE employee_id = ?`;
+        db.run(updateSql, [employeeIdUpper], function(err) {
+            if (err) { return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูลเช็คอิน" }); }
+            res.status(200).json({
+                "message": "เช็คอินสำเร็จ!",
+                "data": { "firstName": row.first_name, "lastName": row.last_name, "employeeId": row.employee_id }
+            });
+        });
     });
 });
 
-app.get('/admin/delete/:id', (req, res) => {
-    if (req.query.key !== SECRET_KEY) { return res.status(401).json({ "error": "Unauthorized" }); }
-    const sql = "DELETE FROM employees WHERE id = ?";
-    db.run(sql, [req.params.id], function(err) {
+// --- Endpoints สำหรับการโหวต ---
+app.get('/candidates', (req, res) => {
+    const sql = "SELECT id, name, department FROM candidates";
+    db.all(sql, [], (err, rows) => {
         if (err) { return res.status(500).json({ "error": err.message }); }
-        res.status(200).json({ "message": "Success", "deletedRows": this.changes });
+        res.status(200).json({ data: rows });
+    });
+});
+
+app.post('/vote', (req, res) => {
+    const { employeeId, candidateId } = req.body;
+    if (!employeeId || !candidateId) { return res.status(400).json({ "error": "ข้อมูลไม่ครบถ้วน" }); }
+    const employeeIdUpper = employeeId.toUpperCase();
+
+    db.get("SELECT * FROM employees WHERE employee_id = ?", [employeeIdUpper], (err, row) => {
+        if (!row) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้ในระบบลงทะเบียน" }); }
+        db.get("SELECT * FROM votes WHERE employee_id = ?", [employeeIdUpper], (err, voteRow) => {
+            if (voteRow) { return res.status(409).json({ "error": "คุณได้ทำการโหวตไปแล้ว" }); }
+            db.serialize(() => {
+                db.run('BEGIN TRANSACTION');
+                db.run("INSERT INTO votes (employee_id) VALUES (?)", [employeeIdUpper]);
+                db.run("UPDATE candidates SET votes = votes + 1 WHERE id = ?", [candidateId]);
+                db.run('COMMIT', (err) => {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกผลโหวต" });
+                    }
+                    res.status(200).json({ "message": "โหวตสำเร็จ!" });
+                });
+            });
+        });
+    });
+});
+
+app.get('/results', (req, res) => {
+    const sql = "SELECT name, department, votes FROM candidates ORDER BY votes DESC";
+    db.all(sql, [], (err, rows) => {
+        if (err) { return res.status(500).json({ "error": err.message }); }
+        res.status(200).json({ data: rows });
     });
 });
 

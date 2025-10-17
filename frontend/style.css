@@ -2,41 +2,60 @@ body {
     font-family: 'Sarabun', sans-serif;
 }
 
-/* ทำให้ Card ขยายขนาดเมื่ออยู่ในหน้าสุ่มรางวัลหรือดูรายชื่อ */
 .card.fullscreen {
     max-width: 800px !important;
 }
 
-/* สไตล์สำหรับ Slot Machine */
 .slot-machine {
     min-height: 140px;
 }
+#slot-name { height: 60px; line-height: 60px; }
+#slot-id { height: 30px; line-height: 30px; }
 
-#slot-name {
-    height: 60px;
-    line-height: 60px;
-}
-
-#slot-id {
-    height: 30px;
-    line-height: 30px;
-}
-
-/* ไฮไลท์รางวัลที่กำลังจะสุ่ม */
 .list-group-item.drawing-now {
     font-weight: bold;
     color: #fff;
-    background-color: #dc3545; /* Bootstrap danger color */
+    background-color: #dc3545;
 }
 
-/* สไตล์สำหรับผลลัพธ์ Check-in */
-#checkinResult .status-icon {
-    font-size: 3rem;
-    line-height: 1;
+#checkinResultContainer .status-icon {
+    font-size: 2.5rem;
 }
 
-/* สไตล์สำหรับผู้ชนะในลิสต์ */
 .winner-name {
     font-weight: bold;
-    color: #0d6efd; /* Bootstrap primary color */
+    color: #0d6efd;
+}
+
+#candidate-list .form-check {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 0.375rem;
+    margin-bottom: 0.75rem;
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+}
+#candidate-list .form-check:has(input:checked) {
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+#candidate-list .form-check-label {
+    width: 100%;
+    cursor: pointer;
+}
+.candidate-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+.candidate-dept {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+#vote-results-list .list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#vote-results-list .badge {
+    font-size: 1rem;
 }
