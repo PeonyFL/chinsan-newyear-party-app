@@ -9,12 +9,13 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
         console.log('Connected to the SQLite database.');
         db.exec('PRAGMA journal_mode = WAL;');
 
-        // ตารางพนักงาน (เพิ่มคอลัมน์สำหรับเช็คอิน)
+        // ตารางพนักงาน (เพิ่มคอลัมน์ department)
         db.run(`CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             employee_id TEXT UNIQUE,
             first_name TEXT,
             last_name TEXT,
+            department TEXT, 
             registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             checked_in INTEGER DEFAULT 0,
             checkin_time TIMESTAMP
@@ -32,7 +33,6 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             if (err) {
                 console.error("Error creating candidates table", err);
             } else {
-                // เพิ่มข้อมูลผู้เข้าประกวดเบื้องต้น (ถ้ายังไม่มี)
                 db.get("SELECT COUNT(*) as count FROM candidates", (err, row) => {
                     if (row.count === 0) {
                         const insert = 'INSERT INTO candidates (name, department) VALUES (?,?)';
