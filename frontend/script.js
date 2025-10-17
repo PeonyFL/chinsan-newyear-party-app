@@ -42,7 +42,6 @@ showFindFormLink.addEventListener('click', (e) => {
 });
 showRegisterFormLink.addEventListener('click', (e) => {
     e.preventDefault();
-    // Go back to the main registration form view
     registrationSection.classList.remove('hidden');
     findSection.classList.add('hidden');
 });
@@ -50,17 +49,18 @@ backToFormBtn.addEventListener('click', showMainPage);
 backFromListBtn.addEventListener('click', showMainPage);
 
 
-// --- Registration Form Submit (Existing) ---
+// --- Registration Form Submit ---
 registrationForm.addEventListener('submit', async function(event) {
     event.preventDefault();
     const firstName = document.getElementById('firstName').value;
     const lastName = document.getElementById('lastName').value;
-    const employeeId = document.getElementById('employeeId').value;
+    // แปลงรหัสพนักงานเป็นตัวพิมพ์ใหญ่ก่อนส่ง
+    const employeeId = document.getElementById('employeeId').value.toUpperCase();
 
     errorDiv.classList.add('hidden');
 
     try {
-        const response = await fetch('https://chinsanparty-backend.onrender.com/register', {
+        const response = await fetch('https://party-backend.onrender.com/register', { // <--- อย่าลืมเปลี่ยน URL เป็นของคุณ
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ firstName, lastName, employeeId }),
@@ -77,10 +77,11 @@ registrationForm.addEventListener('submit', async function(event) {
     }
 });
 
-// --- Find Form Submit (Existing) ---
+// --- Find Form Submit ---
 findForm.addEventListener('submit', async function(event) {
     event.preventDefault();
-    const employeeId = document.getElementById('findEmployeeId').value;
+    // แปลงรหัสพนักงานเป็นตัวพิมพ์ใหญ่ก่อนส่ง
+    const employeeId = document.getElementById('findEmployeeId').value.toUpperCase();
     errorDiv.classList.add('hidden');
 
     if (!employeeId) {
@@ -89,7 +90,7 @@ findForm.addEventListener('submit', async function(event) {
     }
 
     try {
-        const response = await fetch(`https://chinsanparty-backend.onrender.com/find/${employeeId}`);
+        const response = await fetch(`https://party-backend.onrender.com/find/${employeeId}`); // <--- อย่าลืมเปลี่ยน URL เป็นของคุณ
         const data = await response.json();
 
         if (response.ok) {
@@ -104,11 +105,11 @@ findForm.addEventListener('submit', async function(event) {
 });
 
 
-// --- View Employees Button Click (New) ---
+// --- View Employees Button Click ---
 viewEmployeesBtn.addEventListener('click', async function() {
     errorDiv.classList.add('hidden');
     try {
-        const response = await fetch('https://chinsanparty-backend.onrender.com/employees');
+        const response = await fetch('https://party-backend.onrender.com/employees'); // <--- อย่าลืมเปลี่ยน URL เป็นของคุณ
         const result = await response.json();
 
         if (response.ok) {
@@ -124,10 +125,10 @@ viewEmployeesBtn.addEventListener('click', async function() {
 });
 
 
-// --- Table Rendering Function (New) ---
+// --- Table Rendering Function ---
 function renderEmployeeTable(employees) {
     const container = document.getElementById('employeeTableContainer');
-    container.innerHTML = ''; // Clear previous table
+    container.innerHTML = '';
 
     if (employees.length === 0) {
         container.innerHTML = '<p>ยังไม่มีผู้ลงทะเบียน</p>';
@@ -137,7 +138,6 @@ function renderEmployeeTable(employees) {
     const table = document.createElement('table');
     table.className = 'employee-table';
 
-    // Create table header
     const thead = table.createTHead();
     const headerRow = thead.insertRow();
     const headers = ['ชื่อ', 'นามสกุล', 'รหัสพนักงาน', 'เวลาลงทะเบียน'];
@@ -147,14 +147,12 @@ function renderEmployeeTable(employees) {
         headerRow.appendChild(th);
     });
 
-    // Create table body
     const tbody = table.createTBody();
     employees.forEach(emp => {
         const row = tbody.insertRow();
         row.insertCell().textContent = emp.first_name;
         row.insertCell().textContent = emp.last_name;
         row.insertCell().textContent = emp.employee_id;
-        // Format the date for readability
         const formattedDate = new Date(emp.registration_time).toLocaleString('th-TH');
         row.insertCell().textContent = formattedDate;
     });
@@ -163,7 +161,7 @@ function renderEmployeeTable(employees) {
 }
 
 
-// --- Helper Functions to Display Results/Errors (Existing) ---
+// --- Helper Functions to Display Results/Errors ---
 function displayResult(data) {
     resultDiv.classList.remove('hidden');
     document.getElementById('resultMessage').innerText = data.message;
