@@ -60,7 +60,7 @@ registrationForm.addEventListener('submit', async function(event) {
     errorDiv.classList.add('hidden');
 
     try {
-        const response = await fetch('http://localhost:3000/register', {
+        const response = await fetch('https://chinsanparty-backend.onrender.com/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ firstName, lastName, employeeId }),
@@ -89,7 +89,7 @@ findForm.addEventListener('submit', async function(event) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/find/${employeeId}`);
+        const response = await fetch(`https://chinsanparty-backend.onrender.com/find/${employeeId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -108,7 +108,7 @@ findForm.addEventListener('submit', async function(event) {
 viewEmployeesBtn.addEventListener('click', async function() {
     errorDiv.classList.add('hidden');
     try {
-        const response = await fetch('http://localhost:3000/employees');
+        const response = await fetch('https://chinsanparty-backend.onrender.com/employees');
         const result = await response.json();
 
         if (response.ok) {
