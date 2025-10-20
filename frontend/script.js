@@ -3,10 +3,10 @@ const API_BASE_URL = "http://localhost:3000";
 // --- Language Dictionary ---
 const translations = {
     en: {
-        page_title: "New Year Party Registration 2025",
+        page_title: "Chinsan New Year Party 2025",
         role_selection_title: "Please Select Your Role",
         employee_button: "Employee",
-        main_title: "New Year Party Registration",
+        main_title: "Chinsan New Year Party 2025",
         main_subtitle: "Fill in your information to receive a QR Code for entry",
         form_firstname: "First Name",
         form_lastname: "Last Name",
@@ -18,6 +18,7 @@ const translations = {
         back_to_register_link: "Back to Registration",
         save_qr_instruction: "Please save this QR Code for event entry.",
         back_to_main_button: "Back to Main",
+        save_qr_button: "Save QR Code", // <-- เพิ่มใหม่
         admin_modal_title: "For Admin",
         admin_modal_password_label: "Please enter password",
         login_button: "Login",
@@ -57,12 +58,16 @@ const translations = {
         vote_submit_button: "Submit Vote",
         view_vote_results_button: "View Latest Results",
         vote_results_title: "Latest Vote Results",
+        table_header_manage: "Actions",
+        delete_button: "Delete",
+        delete_confirm_title: "Confirm Deletion",
+        delete_confirm_text: "Are you sure you want to delete this registration?",
     },
     th: {
-        page_title: "ลงทะเบียนเข้าร่วมงานปีใหม่ 2568",
+        page_title: "Chinsan New Year Party 2025",
         role_selection_title: "กรุณาเลือกบทบาทของคุณ",
         employee_button: "พนักงาน",
-        main_title: "ลงทะเบียนเข้าร่วมงานปีใหม่",
+        main_title: "Chinsan New Year Party 2025",
         main_subtitle: "กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน",
         form_firstname: "ชื่อจริง",
         form_lastname: "นามสกุล",
@@ -74,6 +79,7 @@ const translations = {
         back_to_register_link: "กลับไปหน้าลงทะเบียน",
         save_qr_instruction: "กรุณาบันทึก QR Code นี้ไว้สำหรับสแกนเข้างาน",
         back_to_main_button: "กลับไปหน้าหลัก",
+        save_qr_button: "บันทึก QR Code", // <-- เพิ่มใหม่
         admin_modal_title: "สำหรับ Admin",
         admin_modal_password_label: "กรุณากรอกรหัสผ่าน",
         login_button: "เข้าสู่ระบบ",
@@ -113,6 +119,10 @@ const translations = {
         vote_submit_button: "ส่งคะแนนโหวต",
         view_vote_results_button: "ดูผลโหวตล่าสุด",
         vote_results_title: "ผลโหวตล่าสุด",
+        table_header_manage: "จัดการ",
+        delete_button: "ลบ",
+        delete_confirm_title: "ยืนยันการลบ",
+        delete_confirm_text: "คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?",
     }
 };
 
@@ -187,6 +197,22 @@ document.getElementById('showVotePageBtn').addEventListener('click', showVotePag
 document.getElementById('backFromVoteBtn').addEventListener('click', () => navigateTo(registrationSection));
 document.getElementById('confirm-export-btn').addEventListener('click', exportToExcel);
 
+// --- เพิ่ม Event Listener สำหรับปุ่มบันทึก QR Code ---
+document.getElementById('saveQrBtn').addEventListener('click', () => {
+    const qrImg = document.querySelector('#qrCodeContainer img');
+    if (qrImg) {
+        // ดึงรหัสพนักงานจาก data-attribute เพื่อใช้ตั้งชื่อไฟล์
+        const employeeId = qrImg.dataset.employeeId || 'event_qr';
+        const link = document.createElement('a');
+        link.href = qrImg.src;
+        link.download = `QRCode_${employeeId}.png`;
+        document.body.appendChild(link); // จำเป็นสำหรับ Firefox
+        link.click();
+        document.body.removeChild(link);
+    }
+});
+
+
 function navigateTo(sectionToShow) {
     allSections.forEach(sec => sec.classList.add('d-none'));
     sectionToShow.classList.remove('d-none');
@@ -228,10 +254,11 @@ adminPasswordForm.addEventListener('submit', (e) => {
 });
 
 // --- Main Application Logic ---
-registrationForm.addEventListener('submit', async (e) => { e.preventDefault(); const payload = { firstName: document.getElementById('firstName').value, lastName: document.getElementById('lastName').value, department: document.getElementById('department').value, employeeId: document.getElementById('employeeId').value.toUpperCase() }; try { const res = await fetch(`${API_BASE_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } });
-findForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('findEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } });
+registrationForm.addEventListener('submit', async (e) => { e.preventDefault(); const payload = { firstName: document.getElementById('firstName').value, lastName: document.getElementById('lastName').value, department: document.getElementById('department').value, employeeId: document.getElementById('employeeId').value.toUpperCase() }; try { const res = await fetch(`${API_BASE_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } });
+findForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('findEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } });
 checkinForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('checkinEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const response = await fetch(`${API_BASE_URL}/checkin`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ employeeId }) }); const result = await response.json(); const container = document.getElementById('checkinResultContainer'); container.classList.remove('d-none'); if (response.ok) { container.innerHTML = `<div class="alert alert-success d-flex align-items-center"><div class="status-icon me-3">✔️</div><div><h4 class="alert-heading">เช็คอินสำเร็จ</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.firstName} ${result.data.lastName}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>รหัสพนักงาน:</strong> ${result.data.employeeId}</p></div></div>`; } else if (response.status === 409) { const checkinTime = new Date(result.data.checkin_time).toLocaleString('th-TH'); container.innerHTML = `<div class="alert alert-warning d-flex align-items-center"><div class="status-icon me-3">⚠️</div><div><h4 class="alert-heading">เช็คอินไปแล้ว</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.firstName} ${result.data.lastName}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>เวลาที่เช็คอิน:</strong> ${checkinTime}</p></div></div>`; } else { container.innerHTML = `<div class="alert alert-danger d-flex align-items-center"><div class="status-icon me-3">❌</div><div><h4 class="alert-heading">ไม่พบข้อมูล</h4><p class="mb-0">กรุณาตรวจสอบรหัสพนักงานอีกครั้ง</p></div></div>`; } } catch (error) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } checkinForm.reset(); });
-async function showEmployeeList() { try { const res = await fetch(`${API_BASE_URL}/employees`); const result = await res.json(); if (res.ok) { navigateTo(employeeListSection); const container = document.getElementById('employeeTableContainer'); document.getElementById('employee-count-badge').innerText = `${result.data.length} คน`; if (result.data.length === 0) { container.innerHTML = '<p class="text-center">ยังไม่มีผู้ลงทะเบียน</p>'; return; } container.innerHTML = `<table class="table table-striped table-hover"><thead class="table-light"><tr><th>ชื่อ</th><th>นามสกุล</th><th>ฝ่าย</th><th>รหัสพนักงาน</th><th>เวลาลงทะเบียน</th><th>สถานะเช็คอิน</th></tr></thead><tbody>${result.data.map(emp => `<tr><td>${emp.first_name}</td><td>${emp.last_name}</td><td>${emp.department}</td><td>${emp.employee_id}</td><td>${new Date(emp.registration_time).toLocaleString('th-TH')}</td><td>${emp.checked_in ? `✔️ <small>${new Date(emp.checkin_time).toLocaleTimeString('th-TH')}</small>` : '❌'}</td></tr>`).join('')}</tbody></table>`; } else { displayError(result.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อได้'); } }
+async function showEmployeeList() { try { const res = await fetch(`${API_BASE_URL}/employees`); const result = await res.json(); if (res.ok) { navigateTo(employeeListSection); const container = document.getElementById('employeeTableContainer'); document.getElementById('employee-count-badge').innerText = `${result.data.length} คน`; if (result.data.length === 0) { container.innerHTML = '<p class="text-center">ยังไม่มีผู้ลงทะเบียน</p>'; return; } container.innerHTML = `<table class="table table-striped table-hover"><thead class="table-light"><tr><th>ชื่อ</th><th>นามสกุล</th><th>ฝ่าย</th><th>รหัสพนักงาน</th><th>เวลาลงทะเบียน</th><th>สถานะเช็คอิน</th><th data-key="table_header_manage">จัดการ</th></tr></thead><tbody>${result.data.map(emp => `<tr><td>${emp.first_name}</td><td>${emp.last_name}</td><td>${emp.department}</td><td>${emp.employee_id}</td><td>${new Date(emp.registration_time).toLocaleString('th-TH')}</td><td>${emp.checked_in ? `✔️ <small>${new Date(emp.checkin_time).toLocaleTimeString('th-TH')}</small>` : '❌'}</td><td><button class="btn btn-danger btn-sm delete-btn" data-id="${emp.id}" data-key="delete_button">ลบ</button></td></tr>`).join('')}</tbody></table>`; const currentLang = localStorage.getItem('language') || 'th'; document.querySelectorAll('[data-key="delete_button"]').forEach(elem => { elem.innerText = translations[currentLang]['delete_button']; }); document.querySelector('[data-key="table_header_manage"]').innerText = translations[currentLang]['table_header_manage']; } else { displayError(result.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อได้'); } }
+document.getElementById('employeeTableContainer').addEventListener('click', async (e) => { if (e.target.classList.contains('delete-btn')) { const employeeId = e.target.dataset.id; const currentLang = localStorage.getItem('language') || 'th'; const confirmText = translations[currentLang].delete_confirm_text; if (confirm(confirmText)) { const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin เพื่อยืนยันการลบ:"); if (adminPassword) { try { const res = await fetch(`${API_BASE_URL}/employees/${employeeId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminPassword: adminPassword }) }); const result = await res.json(); if (res.ok) { alert('ลบข้อมูลสำเร็จ'); showEmployeeList(); } else { displayError(result.error || 'เกิดข้อผิดพลาดในการลบข้อมูล'); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } } } } });
 const drawElements = { setup: document.getElementById('draw-setup'), startBtn: document.getElementById('startDrawBtn'), nextBtn: document.getElementById('drawNextBtn'), resetBtn: document.getElementById('resetDrawBtn'), animationArea: document.getElementById('draw-animation-area'), prizeList: document.getElementById('prize-display-list'), currentPrize: document.getElementById('current-prize-drawing'), slotName: document.getElementById('slot-name'), slotId: document.getElementById('slot-id'), winnersContainer: document.getElementById('winnersListContainer'), winnersList: document.getElementById('winnersList'), modal: new bootstrap.Modal(document.getElementById('winnerModal')), modalPrize: document.getElementById('modal-prize-name'), modalWinner: document.getElementById('modal-winner-name'), modalId: document.getElementById('modal-winner-id') };
 let allWinners = [], allEmployees = [], currentWinnerIndex = 0;
 drawElements.startBtn.addEventListener('click', setupNewDraw);
