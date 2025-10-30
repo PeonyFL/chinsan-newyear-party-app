@@ -8,7 +8,7 @@ body {
 
 .card.fullscreen {
     /* (แก้ไข) เพิ่ม max-width สำหรับหน้า Real-time */
-    max-width: 900px !important; 
+    max-width: 1140px !important; 
 }
 
 .language-switcher {

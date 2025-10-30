@@ -22,11 +22,13 @@
                 <button id="lang-th-btn" class="btn btn-sm lang-btn active" data-lang="th">ไทย</button>
                 <button id="lang-en-btn" class="btn btn-sm lang-btn" data-lang="en">Eng</button>
             </div>
-
+            
             <div id="role-selection-section">
                 <h1 class="h3 mb-4 fw-bold text-center" data-key="role_selection_title">กรุณาเลือกบทบาทของคุณ</h1>
                 <div class="d-grid gap-3">
-                    <button id="select-employee-btn" class="btn btn-primary btn-lg" data-key="employee_button">พนักงาน (ค้นหา QR)</button>
+                    <button id="select-employee-btn" class="btn btn-primary btn-lg" data-key="employee_button">พนักงาน (งานปีใหม่)</button>
+                    <button id="select-sportday-btn" class="btn btn-success btn-lg" data-key="sportday_button">ลงทะเบียนกีฬาสี</button>
+                    
                     <button id="select-admin-btn" class="btn btn-secondary btn-lg">Admin</button>
                 </div>
             </div>
@@ -54,6 +56,7 @@
                             </button>
                             <button type="button" id="showCheckinPageBtn" class="btn btn-warning" data-key="checkin_button">เช็คอิน</button>
                             <button type="button" id="showVotePageBtn" class="btn btn-danger" data-key="vote_button">โหวต</button>
+                            <button type="button" id="manageVotePeriodBtn" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#manageVotePeriodModal">ตั้งเวลาโหวต</button>
                             <button type="button" id="manageCandidatesBtn" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#manageCandidatesModal">
                                 จัดการผู้เข้าประกวด
                             </button>
@@ -80,6 +83,7 @@
                         </div>
                         </div>
                 </div>
+
                 <div id="find-section" class="d-none">
                     <form id="findForm">
                         <div class="mb-3"><label for="findEmployeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label><input type="text" class="form-control" id="findEmployeeId" required></div>
@@ -87,6 +91,7 @@
                     </form>
                     <div class="text-center mt-3"><a href="#" id="showRegisterFormLink" data-key="back_to_register_link" class="d-none">กลับไปหน้าลงทะเบียน</a></div>
                 </div>
+                
                 <div id="result" class="text-center d-none">
                     <h2 id="resultMessage" class="h4 text-success"></h2>
                     <div id="qrCodeContainer" class="my-3"></div>
@@ -96,6 +101,26 @@
                         <button type="button" id="backToFormBtn" class="btn btn-secondary" data-key="back_to_main_button">กลับไปหน้าหลัก</button>
                     </div>
                 </div>
+
+                <div id="sportday-section" class="d-none">
+                    <h1 class="h3 mb-3 fw-bold text-center" data-key="sportday_title">ลงทะเบียนกีฬาสี</h1>
+                    <p class="text-muted text-center mb-4" data-key="sportday_subtitle">กรอกรหัสพนักงานเพื่อยืนยันการเข้าร่วม</p>
+                    <form id="sportdayForm">
+                        <div class="mb-3">
+                            <label for="sportdayEmployeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label>
+                            <input type="text" class="form-control" id="sportdayEmployeeId" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg" data-key="sportday_register_button">ยืนยันเข้าร่วม</button>
+                        </div>
+                    </form>
+                    <div id="sportdayResultContainer" class="d-none mt-4"></div>
+                    
+                    <div class="text-center mt-3">
+                        <button type="button" id="backFromSportdayBtn" class="btn btn-secondary" data-key="back_to_role_selection">กลับไปหน้าหลัก</button>
+                    </div>
+                </div>
+                
                 <div id="employee-list-section" class="d-none">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <button type="button" id="backFromListBtn" class="btn btn-secondary" data-key="back_to_main_button">กลับไปหน้าหลัก</button>
@@ -112,10 +137,7 @@
                     <div id="draw-setup">
                         <h1 class="h3 mb-3 fw-bold" data-key="draw_title">จับรางวัลผู้โชคดี</h1>
                         <div class="row mb-3">
-                            <div class="col">
-                                <label for="drawTimeInput" class="form-label">เวลาสุ่ม (วินาที)</label>
-                                <input type="number" class="form-control" id="drawTimeInput" value="3" min="1">
-                            </div>
+                            
                         </div>
                         <div class="card mb-4">
                             <div class="card-body">
@@ -128,7 +150,33 @@
                              <button type="button" id="startDrawBtn" class="btn btn-success btn-lg" data-key="start_draw_button">เริ่มการสุ่ม!</button>
                         </div>
                     </div>
-                    <div id="draw-animation-area" class="d-none"><div class="mb-3"><p class="mb-1 text-muted" data-key="drawing_for_prize">กำลังสุ่มรางวัล:</p><h2 id="current-prize-drawing" class="h5 text-danger"></h2></div><div class="slot-machine bg-dark text-white rounded p-4 mb-3"><p id="slot-name" class="display-6 fw-bold text-warning" data-key="slot_name_placeholder">ชื่อ-นามสกุล</p><p id="slot-id" class="text-light" data-key="slot_id_placeholder">รหัสพนักงาน</p></div><div id="draw-controls" class="d-grid gap-2"><button type="button" id="drawNextBtn" class="btn btn-success btn-lg" data-key="draw_next_button">สุ่มรางวัลถัดไป!</button><button type="button" id="resetDrawBtn" class="btn btn-secondary d-none" data-key="reset_draw_button">เริ่มการสุ่มใหม่</button></div></div>
+                    <div id="draw-animation-area" class="d-none">
+                        <div class="mb-3">
+                            <p class="mb-1 text-muted" data-key="drawing_for_prize">กำลังสุ่มรางวัล:</p>
+                            <h2 id="current-prize-drawing" class="h5 text-danger"></h2>
+                        </div>
+                        <div class="slot-machine bg-dark text-white rounded p-4 mb-3">
+                            <p id="slot-name" class="display-6 fw-bold text-warning" data-key="slot_name_placeholder">ชื่อ-นามสกุล</p>
+                            <p id="slot-id" class="text-light" data-key="slot_id_placeholder">รหัสพนักงาน</p>
+                        </div>
+                        <!---->
+                        <div id="draw-controls" class="gap-2">
+                            <div class="row g-2 mb-3">
+                                <div class="col">
+                                    <label for="drawTimeInput" class="form-label" data-key="draw_time_label">เวลาสุ่ม (วินาที)</label>
+                                    <input type="number" class="form-control" id="drawTimeInput" value="3" min="1">
+                                </div>
+                                <div class="col">
+                                    <label for="drawCountInput" class="form-label" data-key="draw_count_label">จำนวนรางวัล (รอบนี้)</label>
+                                    <input type="number" class="form-control" id="drawCountInput" value="1" min="1">
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2"> 
+                                <button type="button" id="drawNextBtn" class="btn btn-success btn-lg" data-key="draw_next_button">สุ่มรางวัล!</button>
+                                <button type="button" id="resetDrawBtn" class="btn btn-secondary d-none" data-key="reset_draw_button">เริ่มการสุ่มใหม่</button>
+                            </div>
+                        </div>
+                    </div>
                     <div id="winnersListContainer" class="d-none mt-4 text-start"><h2 class="h4" data-key="winners_list_title">🎉 รายชื่อผู้โชคดี 🎉</h2><ol class="list-group list-group-numbered" reversed id="winnersList"></ol></div>
                 </div>
                 <div id="checkin-section" class="d-none">
@@ -153,6 +201,12 @@
                     </div>
                     <div id="vote-main-area" class="d-none">
                         <p id="voteUserMessage" class="text-success mb-3"></p>
+
+                        <div id="vote-countdown-container" class="alert alert-info text-center d-none">
+                            <strong data-key="vote_countdown_label">เวลาที่เหลือ:</strong>
+                            <h3 id="vote-countdown-timer" class_name="fw-bold mb-0">--:--</h3>
+                        </div>
+
                         <form id="voteForm">
                             <p class="text-muted" data-key="vote_subtitle">เลือกผู้เข้าประกวดที่คุณชื่นชอบ</p>
                             <div id="candidate-list" class="mb-4">
@@ -188,6 +242,43 @@
     <div class="modal fade" id="exportExcelModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" data-key="export_modal_title">เลือกหัวข้อที่ต้องการ Export</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p data-key="export_modal_subtitle">กรุณาเลือกข้อมูลที่ต้องการนำออกมาเป็นไฟล์ Excel</p><div class="form-check"><input class="form-check-input" type="checkbox" value="employees" id="export-employees-check" checked><label class="form-check-label" for="export-employees-check" data-key="export_option_employees">รายชื่อผู้ลงทะเบียนทั้งหมด</label></div><div class="form-check"><input class="form-check-input" type="checkbox" value="winners" id="export-winners-check" checked><label class="form-check-label" for="export-winners-check" data-key="export_option_winners">รายชื่อผู้โชคดีที่ได้รับรางวัล</label></div><div class="form-check"><input class="form-check-input" type="checkbox" value="votes" id="export-votes-check" checked><label class="form-check-label" for="export-votes-check" data-key="export_option_votes">ผลคะแนนโหวตการประกวด</label></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-key="cancel_button">ยกเลิก</button><button type="button" id="confirm-export-btn" class="btn btn-success" data-key="confirm_export_button">ยืนยันการ Export</button></div></div></div></div>
     <div class="modal fade" id="managePrizesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">จัดการรายการรางวัล</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p class="text-muted">คุณสามารถ เพิ่ม, ลบ, หรือแก้ไขชื่อรางวัลได้ที่นี่ ลำดับรางวัลจะเรียงตามลำดับการเพิ่ม (รางวัลที่ 1 จะอยู่ล่างสุด)</p><ul class="list-group mb-3" id="prize-management-list"></ul><form id="addPrizeForm"><div class="input-group"><input type="text" id="newPrizeNameInput" class="form-control" placeholder="กรอกชื่อรางวัลใหม่" required><button class="btn btn-success" type="submit">เพิ่มรางวัล</button></div></form></div><div class="modal-footer justify-content-between"><button type="button" id="resetPrizesBtn" class="btn btn-danger">รีเซ็ตเป็นค่าเริ่มต้น</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button></div></div></div></div>
     <div class="modal fade" id="manageCandidatesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">จัดการผู้เข้าประกวด</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p class="text-muted">คุณสามารถ เพิ่ม, ลบ, หรือแก้ไขรายชื่อผู้เข้าประกวดได้ที่นี่</p><ul class="list-group mb-3" id="candidate-management-list"></ul><form id="addCandidateForm"><div class="input-group"><input type="text" id="newCandidateNameInput" class="form-control" placeholder="ชื่อ-นามสกุล ผู้เข้าประกวด" required><input type="text" id="newCandidateDeptInput" class="form-control" placeholder="ฝ่าย" required><button class="btn btn-success" type="submit">เพิ่มผู้เข้าประกวด</button></div></form></div><div class="modal-footer justify-content-between"><button type="button" id="resetCandidatesBtn" class="btn btn-danger">รีเซ็ตเป็นค่าเริ่มต้น</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button></div></div></div></div>
+    <div class="modal fade" id="manageVotePeriodModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-key="vote_manage_title">ตั้งค่าการโหวต</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="vote-status-loading" class="text-center">
+                    <span class="spinner-border spinner-border-sm"></span>
+                    <span data-key="vote_status_loading">กำลังโหลดสถานะ...</span>
+                </div>
+                <div id="vote-status-display" class="d-none">
+                    <div id="vote-status-closed" class="d-none">
+                        <p data-key="vote_status_closed">สถานะ: ปิดโหวต</p>
+                        <form id="startVoteForm">
+                            <div class="mb-3">
+                                <label for="voteDurationInput" class="form-label" data-key="vote_duration_label">ระยะเวลา (นาที)</label>
+                                <input type="number" class="form-control" id="voteDurationInput" value="10" min="1" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100" data-key="vote_start_button">เริ่มเปิดโหวต</button>
+                        </form>
+                    </div>
+                    <div id="vote-status-open" class="d-none">
+                        <div class="alert alert-success">
+                            <strong data-key="vote_status_open">สถานะ: เปิดโหวต</strong>
+                            <p id="vote-deadline-display" class="mb-0"></p>
+                            <h3 id="admin-vote-countdown" class="fw-bold text-center my-2">--:--</h3>
+                        </div>
+                        <button type="button" id="closeVoteNowBtn" class="btn btn-danger w-100" data-key="vote_close_button">ปิดโหวตทันที</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>

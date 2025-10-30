@@ -156,7 +156,7 @@ app.get('/find/:employeeId', (req, res) => {
 
 // GET /employees - Get list of all employees (Admin)
 app.get('/employees', (req, res) => {
-    const sql = "SELECT id, first_name, last_name, employee_id, department, registration_time, checked_in, checkin_time FROM employees ORDER BY registration_time DESC";
+    const sql = "SELECT id, first_name, last_name, employee_id, department, registration_time, checked_in, checkin_time, sport_day_registered, sport_day_reg_time FROM employees ORDER BY registration_time DESC";
     db.all(sql, [], (err, rows) => {
         if (err) { res.status(500).json({ "error": err.message }); return; }
         res.status(200).json({ "message": "success", "data": rows });
@@ -192,7 +192,46 @@ app.post('/checkin', (req, res) => {
         });
     });
 });
+// (ใหม่) POST /sportday-register - ลงทะเบียนเข้าร่วมงานกีฬาสี
+app.post('/sportday-register', (req, res) => {
+    const { employeeId } = req.body;
+    if (!employeeId) { 
+        return res.status(400).json({ "error": "กรุณากรอกรหัสพนักงาน" }); 
+    }
+    const employeeIdUpper = employeeId.toUpperCase();
 
+    const sql = "SELECT * FROM employees WHERE employee_id = ?";
+    db.get(sql, [employeeIdUpper], (err, row) => {
+        if (err) { return res.status(500).json({ "error": err.message }); }
+        if (!row) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้ในระบบ" }); }
+        
+        // ตรวจสอบว่าลงทะเบียนไปแล้วหรือยัง
+        if (row.sport_day_registered) {
+            return res.status(409).json({
+                "error": "คุณได้ลงทะเบียนเข้าร่วมงานกีฬาสีไปแล้ว",
+                "data": { "reg_time": row.sport_day_reg_time }
+            });
+        }
+
+        // ถ้ายัง ให้ลงทะเบียน
+        const updateSql = `UPDATE employees 
+                           SET sport_day_registered = 1, sport_day_reg_time = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') 
+                           WHERE employee_id = ?`;
+                           
+        db.run(updateSql, [employeeIdUpper], function(err) {
+            if (err) { return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูล" }); }
+            res.status(200).json({
+                "message": "ลงทะเบียนเข้าร่วมงานกีฬาสีสำเร็จ!",
+                "data": { 
+                    "firstName": row.first_name, 
+                    "lastName": row.last_name, 
+                    "department": row.department, 
+                    "employeeId": row.employee_id 
+                }
+            });
+        });
+    });
+});
 // DELETE /employees/all - Delete all employee data (Admin)
 app.delete('/employees/all', (req, res) => {
     const { adminPassword } = req.body;
@@ -342,6 +381,60 @@ app.post('/prizes/reset', (req, res) => {
 });
 
 // --- Vote Endpoints ---
+// (ใหม่) GET /vote-status - Check if voting is open
+app.get('/vote-status', (req, res) => {
+    // Check if the deadline has passed
+    const now = new Date().toISOString();
+    db.get("SELECT * FROM vote_status WHERE id = 1", [], (err, row) => {
+        if (err) { return res.status(500).json({ "error": err.message }); }
+
+        if (row.is_open && row.deadline && row.deadline < now) {
+            // Deadline has passed. Auto-close it.
+            db.run("UPDATE vote_status SET is_open = 0 WHERE id = 1", [], (updateErr) => {
+                if (updateErr) { return res.status(500).json({ "error": updateErr.message }); }
+                res.status(200).json({ is_open: false, deadline: row.deadline });
+            });
+        } else {
+            // Return current status
+            res.status(200).json({ is_open: !!row.is_open, deadline: row.deadline });
+        }
+    });
+});
+
+// (ใหม่) POST /vote/start - Start the voting period
+app.post('/vote/start', (req, res) => {
+    const { durationInMinutes, adminPassword } = req.body;
+    if (adminPassword !== CORRECT_PASSWORD) {
+        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
+    }
+    if (!durationInMinutes || durationInMinutes <= 0) {
+        return res.status(400).json({ "error": "กรุณากำหนดระยะเวลา (นาที) ให้ถูกต้อง" });
+    }
+
+    const now = new Date();
+    const deadline = new Date(now.getTime() + durationInMinutes * 60000);
+    const deadlineISO = deadline.toISOString(); // Use ISO format
+
+    const sql = "UPDATE vote_status SET is_open = 1, deadline = ? WHERE id = 1";
+    db.run(sql, [deadlineISO], function(err) {
+        if (err) { return res.status(500).json({ "error": err.message }); }
+        res.status(201).json({ "message": "เปิดระบบโหวตสำเร็จ!", "deadline": deadlineISO });
+    });
+});
+
+// (ใหม่) POST /vote/close - Manually close voting
+app.post('/vote/close', (req, res) => {
+    const { adminPassword } = req.body;
+    if (adminPassword !== CORRECT_PASSWORD) {
+        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
+    }
+
+    const sql = "UPDATE vote_status SET is_open = 0, deadline = NULL WHERE id = 1";
+    db.run(sql, [], function(err) {
+        if (err) { return res.status(500).json({ "error": err.message }); }
+        res.status(200).json({ "message": "ปิดระบบโหวตสำเร็จ" });
+    });
+});
 
 // GET /candidates - Get all candidates (includes votes for management/results)
 app.get('/candidates', (req, res) => {
@@ -358,46 +451,59 @@ app.post('/vote', (req, res) => {
     if (!employeeId || !candidateId) { return res.status(400).json({ "error": "ข้อมูลไม่ครบถ้วน (vote)" }); }
     const employeeIdUpper = employeeId.toUpperCase();
 
-    // Double-check check-in status on the server
-    db.get("SELECT checked_in FROM employees WHERE employee_id = ?", [employeeIdUpper], (err, empRow) => {
-        if (err) { return res.status(500).json({ "error": "DB Error checking employee status: " + err.message }); }
-        if (!empRow) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้" }); } // Should be caught by eligibility check, but good to have
-        if (!empRow.checked_in) { return res.status(403).json({ "error": "พนักงานยังไม่ได้เช็คอิน (Server Check)" }); } // Extra server-side check
+    // (แก้ไข) 1. Check if voting is open
+    const now = new Date().toISOString();
+    db.get("SELECT * FROM vote_status WHERE id = 1", [], (err, statusRow) => {
+        if (err) { return res.status(500).json({ "error": "DB Error checking vote status: " + err.message }); }
 
-        // Check if already voted
-        db.get("SELECT * FROM votes WHERE employee_id = ?", [employeeIdUpper], (err, voteRow) => {
-            if (err) { return res.status(500).json({ "error": "DB Error checking vote status: " + err.message }); }
-            if (voteRow) { return res.status(409).json({ "error": "คุณได้ทำการโหวตไปแล้ว (Server Check)" }); }
+        if (!statusRow.is_open) {
+            return res.status(403).json({ "error": "ระบบโหวตยังไม่เปิดหรือปิดไปแล้ว" });
+        }
+        if (statusRow.deadline && statusRow.deadline < now) {
+            // Auto-close if deadline passed
+            db.run("UPDATE vote_status SET is_open = 0 WHERE id = 1");
+            return res.status(403).json({ "error": "หมดเวลาโหวตแล้ว" });
+        }
 
-            // Proceed with voting in a transaction
-            db.serialize(() => {
-                db.run('BEGIN TRANSACTION');
-                // Log the vote
-                db.run("INSERT INTO votes (employee_id) VALUES (?)", [employeeIdUpper], (err) => {
-                    if (err) {
-                        db.run('ROLLBACK');
-                        return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกสิทธิ์โหวต" });
-                    }
-                });
-                // Increment candidate's vote count
-                db.run("UPDATE candidates SET votes = votes + 1 WHERE id = ?", [candidateId], (err) => {
-                     if (err) {
-                        db.run('ROLLBACK');
-                        return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการอัปเดตคะแนน" });
-                    }
-                });
-                // Commit transaction
-                db.run('COMMIT', (err) => {
-                    if (err) {
-                        db.run('ROLLBACK'); // Rollback on commit error
-                        return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการยืนยันผลโหวต" });
-                    }
-                    res.status(200).json({ "message": "โหวตสำเร็จ!" });
+        // (Original Logic) Double-check check-in status on the server
+        db.get("SELECT checked_in FROM employees WHERE employee_id = ?", [employeeIdUpper], (err, empRow) => {
+            if (err) { return res.status(500).json({ "error": "DB Error checking employee status: " + err.message }); }
+            if (!empRow) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้" }); } 
+            if (!empRow.checked_in) { return res.status(403).json({ "error": "พนักงานยังไม่ได้เช็คอิน (Server Check)" }); } 
+
+            // Check if already voted
+            db.get("SELECT * FROM votes WHERE employee_id = ?", [employeeIdUpper], (err, voteRow) => {
+                if (err) { return res.status(500).json({ "error": "DB Error checking vote status: " + err.message }); }
+                if (voteRow) { return res.status(409).json({ "error": "คุณได้ทำการโหวตไปแล้ว (Server Check)" }); }
+
+                // Proceed with voting in a transaction
+                db.serialize(() => {
+                    db.run('BEGIN TRANSACTION');
+                    db.run("INSERT INTO votes (employee_id) VALUES (?)", [employeeIdUpper], (err) => {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกสิทธิ์โหวต" });
+                        }
+                    });
+                    db.run("UPDATE candidates SET votes = votes + 1 WHERE id = ?", [candidateId], (err) => {
+                         if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการอัปเดตคะแนน" });
+                        }
+                    });
+                    db.run('COMMIT', (err) => {
+                        if (err) {
+                            db.run('ROLLBACK'); 
+                            return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการยืนยันผลโหวต" });
+                        }
+                        res.status(200).json({ "message": "โหวตสำเร็จ!" });
+                    });
                 });
             });
         });
     });
 });
+
 
 // GET /results - Get vote results (same as /candidates now)
 app.get('/results', (req, res) => {
@@ -423,6 +529,8 @@ app.post('/candidates', (req, res) => {
         res.status(201).json({ "message": "เพิ่มผู้เข้าประกวดสำเร็จ", "id": this.lastID });
     });
 });
+
+
 
 // PUT /candidates/:id - Edit a candidate
 app.put('/candidates/:id', (req, res) => {
@@ -484,26 +592,45 @@ app.get('/check-vote-eligibility/:employeeId', (req, res) => {
         return res.status(400).json({ status: 'error', message: "กรุณากรอกรหัสพนักงาน" });
     }
 
-    // 1. Check if employee exists and is checked in
-    const sqlEmployee = "SELECT checked_in FROM employees WHERE employee_id = ?";
-    db.get(sqlEmployee, [employeeId], (err, empRow) => {
+    // (แก้ไข) 1. Check if voting is open
+    const now = new Date().toISOString();
+    db.get("SELECT * FROM vote_status WHERE id = 1", [], (err, statusRow) => {
         if (err) { return res.status(500).json({ status: 'error', message: "DB Error: " + err.message }); }
-        if (!empRow) {
-            return res.status(404).json({ status: 'not_found', message: "ไม่พบรหัสพนักงานนี้" });
+
+        if (!statusRow.is_open) {
+            return res.status(403).json({ status: 'vote_closed', message: "ระบบโหวตยังไม่เปิดหรือปิดไปแล้ว" });
         }
-        if (!empRow.checked_in) {
-            return res.status(403).json({ status: 'not_checked_in', message: "คุณยังไม่ได้เช็คอินเข้าร่วมงาน" });
+        if (statusRow.deadline && statusRow.deadline < now) {
+            // Auto-close if deadline passed
+            db.run("UPDATE vote_status SET is_open = 0 WHERE id = 1");
+            return res.status(403).json({ status: 'vote_closed', message: "หมดเวลาโหวตแล้ว" });
         }
 
-        // 2. Check if employee has already voted
-        const sqlVote = "SELECT * FROM votes WHERE employee_id = ?";
-        db.get(sqlVote, [employeeId], (err, voteRow) => {
+        // (Original Logic) 2. Check if employee exists and is checked in
+        const sqlEmployee = "SELECT checked_in FROM employees WHERE employee_id = ?";
+        db.get(sqlEmployee, [employeeId], (err, empRow) => {
             if (err) { return res.status(500).json({ status: 'error', message: "DB Error: " + err.message }); }
-            if (voteRow) {
-                return res.status(409).json({ status: 'already_voted', message: "คุณได้ทำการโหวตไปแล้ว" });
+            if (!empRow) {
+                return res.status(404).json({ status: 'not_found', message: "ไม่พบรหัสพนักงานนี้" });
             }
-            // If checked in and not voted yet, they are eligible
-            res.status(200).json({ status: 'eligible', message: "คุณมีสิทธิ์โหวต" });
+            if (!empRow.checked_in) {
+                return res.status(403).json({ status: 'not_checked_in', message: "คุณยังไม่ได้เช็คอินเข้าร่วมงาน" });
+            }
+
+            // 3. Check if employee has already voted
+            const sqlVote = "SELECT * FROM votes WHERE employee_id = ?";
+            db.get(sqlVote, [employeeId], (err, voteRow) => {
+                if (err) { return res.status(500).json({ status: 'error', message: "DB Error: " + err.message }); }
+                if (voteRow) {
+                    return res.status(409).json({ status: 'already_voted', message: "คุณได้ทำการโหวตไปแล้ว" });
+                }
+                // (แก้ไข) ส่งเวลาปิดโหวตกลับไปด้วย
+                res.status(200).json({ 
+                    status: 'eligible', 
+                    message: `คุณมีสิทธิ์โหวต (ปิดโหวต ${new Date(statusRow.deadline).toLocaleTimeString('th-TH')})`,
+                    deadline: statusRow.deadline // <-- (ใหม่) ส่งเวลาปิดโหวต (raw) กลับไปด้วย
+                });
+            });
         });
     });
 });

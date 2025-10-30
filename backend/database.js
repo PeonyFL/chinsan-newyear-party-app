@@ -24,7 +24,9 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             department TEXT,
             registration_time TIMESTAMP,
             checked_in INTEGER DEFAULT 0,
-            checkin_time TIMESTAMP
+            checkin_time TIMESTAMP,
+            sport_day_registered INTEGER DEFAULT 0,
+            sport_day_reg_time TIMESTAMP
         )`, (err) => {
             if (err) console.error("Error creating 'employees' table:", err.message);
         });
@@ -54,8 +56,19 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             if (err) console.error("Error creating 'prizes' table:", err.message);
         });
 
+        // (ใหม่) 6. Create vote_status table
+        db.run(`CREATE TABLE IF NOT EXISTS vote_status (
+            id INTEGER PRIMARY KEY DEFAULT 1,
+            is_open INTEGER DEFAULT 0,
+            deadline TIMESTAMP
+        )`, (err) => {
+            if (err) console.error("Error creating 'vote_status' table:", err.message);
+        });
 
-        // 6. Populate default data if tables are empty
+        // (ใหม่) 7. Ensure the single row exists in vote_status
+        db.run(`INSERT OR IGNORE INTO vote_status (id, is_open, deadline) VALUES (1, 0, NULL)`, (err) => {
+            if (err) console.error("Error inserting default 'vote_status' row:", err.message);
+        });
 
         // Check candidates
         db.get("SELECT COUNT(*) as count FROM candidates", [], (err, row) => {
