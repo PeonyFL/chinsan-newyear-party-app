@@ -8,7 +8,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const CORRECT_PASSWORD = 'admin'; // Admin password
+const CORRECT_PASSWORD = 'admin'; // Admin password (ยังคงใช้สำหรับ Login และ "ลบทั้งหมด")
 
 // Setup (Uploads folder, Multer, Middleware)
 const uploadDir = 'uploads';
@@ -43,11 +43,7 @@ function handleUploadErrors(err, req, res, next) {
 
 // POST /upload-employees - Upload Excel file for bulk employee addition
 app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors, (req, res) => {
-    const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        safeUnlink(req.file.path);
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบการตรวจสอบรหัสผ่าน)
     if (!req.file) {
         return res.status(400).json({ "error": "ไม่พบไฟล์ที่อัปโหลด" });
     }
@@ -94,13 +90,14 @@ app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors,
 
 // POST /add-employee - Admin adds a single employee
 app.post('/add-employee', (req, res) => {
-    const { firstName, lastName, department, employeeId, adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบ adminPassword ออกจาก const)
+    const { firstName, lastName, department, employeeId } = req.body;
+
     if (!firstName || !lastName || !department || !employeeId) {
         return res.status(400).json({ "error": "กรุณากรอกข้อมูลให้ครบถ้วน" });
     }
+    // (ลบการตรวจสอบรหัสผ่าน)
+    
     const sql = "INSERT OR IGNORE INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES (?,?,?,?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))";
     const employeeIdUpper = String(employeeId).toUpperCase();
     db.run(sql, [firstName, lastName, department, employeeIdUpper], function(err) {
@@ -162,6 +159,40 @@ app.get('/employees', (req, res) => {
         res.status(200).json({ "message": "success", "data": rows });
     });
 });
+
+// (ใหม่) GET /employees/status-summary - Get counts for admin dashboard
+app.get('/employees/status-summary', (req, res) => {
+    const queries = {
+        total: "SELECT COUNT(*) as count FROM employees",
+        new_year: "SELECT COUNT(*) as count FROM employees WHERE registration_time IS NOT NULL",
+        sport_day: "SELECT COUNT(*) as count FROM employees WHERE sport_day_registered = 1",
+        checked_in: "SELECT COUNT(*) as count FROM employees WHERE checked_in = 1",
+        all_three: "SELECT COUNT(*) as count FROM employees WHERE registration_time IS NOT NULL AND sport_day_registered = 1 AND checked_in = 1"
+    };
+
+    const results = {};
+    const promises = Object.keys(queries).map(key => {
+        return new Promise((resolve, reject) => {
+            db.get(queries[key], [], (err, row) => {
+                if (err) return reject(err);
+                results[key] = row.count;
+                resolve();
+            });
+        });
+    });
+
+    Promise.all(promises)
+        .then(() => {
+            res.status(200).json({ data: results });
+        })
+        .catch(err => {
+            res.status(500).json({ "error": "Database error while summarizing status: " + err.message });
+        });
+});
+
+// POST /checkin - Check in an employee (Admin) ... (โค้ดเดิม)
+
+
 
 // POST /checkin - Check in an employee (Admin)
 app.post('/checkin', (req, res) => {
@@ -232,8 +263,10 @@ app.post('/sportday-register', (req, res) => {
         });
     });
 });
+
 // DELETE /employees/all - Delete all employee data (Admin)
 app.delete('/employees/all', (req, res) => {
+    // (คงไว้) จุดเดียวที่ตรวจสอบรหัสผ่าน
     const { adminPassword } = req.body;
     if (adminPassword !== CORRECT_PASSWORD) {
         return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
@@ -255,10 +288,7 @@ app.delete('/employees/all', (req, res) => {
 
 // DELETE /employees/:id - Delete a single employee (Admin)
 app.delete('/employees/:id', (req, res) => {
-    const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบการตรวจสอบรหัสผ่าน)
     const sql = "DELETE FROM employees WHERE id = ?";
     db.run(sql, [req.params.id], function(err) {
         if (err) { return res.status(500).json({ "error": err.message }); }
@@ -280,14 +310,14 @@ app.get('/draw', (req, res) => {
         }
 
         // 2. Select eligible employees (checked_in = 1)
-        const sql = "SELECT id, first_name, last_name, employee_id, department FROM employees WHERE checked_in = 1";
+        const sql = "SELECT id, first_name, last_name, employee_id, department FROM employees WHERE checked_in = 1 AND sport_day_registered = 1 AND registration_time IS NOT NULL";
         db.all(sql, [], (err, rows) => {
             if (err) { return res.status(500).json({ "error": "Database error getting checked-in employees: " + err.message }); }
             if (rows.length === 0) {
-                return res.status(400).json({ "error": "ยังไม่มีผู้เช็คอินเข้าร่วมงาน" });
+                return res.status(400).json({ "error": "ยังไม่มีผู้มีสิทธิ์ครบทั้ง 3 เงื่อนไข (ลงทะเบียนปีใหม่, กีฬาสี, และเช็คอิน)" });
             }
             if (rows.length < numberOfWinners) {
-                return res.status(400).json({ "error": `มีผู้เช็คอิน (${rows.length} คน) น้อยกว่าจำนวนรางวัล (${numberOfWinners} รางวัล)` });
+                return res.status(400).json({ "error": `มีผู้มีสิทธิ์ครบ (${rows.length} คน) น้อยกว่าจำนวนรางวัล (${numberOfWinners} รางวัล)` });
             }
 
             // 3. Shuffle the eligible employees (Fisher-Yates shuffle)
@@ -314,10 +344,10 @@ app.get('/prizes', (req, res) => {
 
 // POST /prizes - Add a new prize
 app.post('/prizes', (req, res) => {
-    const { name, adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบ adminPassword ออกจาก const)
+    const { name } = req.body;
+    
+    // (ลบการตรวจสอบรหัสผ่าน)
     if (!name) {
         return res.status(400).json({ "error": "กรุณากรอกชื่อรางวัล" });
     }
@@ -330,10 +360,10 @@ app.post('/prizes', (req, res) => {
 
 // PUT /prizes/:id - Edit an existing prize
 app.put('/prizes/:id', (req, res) => {
-    const { name, adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบ adminPassword ออกจาก const)
+    const { name } = req.body;
+    
+    // (ลบการตรวจสอบรหัสผ่าน)
     if (!name) {
         return res.status(400).json({ "error": "กรุณากรอกชื่อรางวัล" });
     }
@@ -347,10 +377,7 @@ app.put('/prizes/:id', (req, res) => {
 
 // DELETE /prizes/:id - Delete a prize
 app.delete('/prizes/:id', (req, res) => {
-    const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบการตรวจสอบรหัสผ่าน)
     const sql = "DELETE FROM prizes WHERE id = ?";
     db.run(sql, [req.params.id], function(err) {
         if (err) { return res.status(500).json({ "error": err.message }); }
@@ -361,10 +388,7 @@ app.delete('/prizes/:id', (req, res) => {
 
 // POST /prizes/reset - Reset prizes to default
 app.post('/prizes/reset', (req, res) => {
-    const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบการตรวจสอบรหัสผ่าน)
     db.serialize(() => {
         db.run("DELETE FROM prizes"); // Clear existing prizes
         const insert = 'INSERT INTO prizes (name) VALUES (?)';
@@ -403,10 +427,10 @@ app.get('/vote-status', (req, res) => {
 
 // (ใหม่) POST /vote/start - Start the voting period
 app.post('/vote/start', (req, res) => {
-    const { durationInMinutes, adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบ adminPassword ออกจาก const)
+    const { durationInMinutes } = req.body;
+    
+    // (ลบการตรวจสอบรหัสผ่าน)
     if (!durationInMinutes || durationInMinutes <= 0) {
         return res.status(400).json({ "error": "กรุณากำหนดระยะเวลา (นาที) ให้ถูกต้อง" });
     }
@@ -424,11 +448,7 @@ app.post('/vote/start', (req, res) => {
 
 // (ใหม่) POST /vote/close - Manually close voting
 app.post('/vote/close', (req, res) => {
-    const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
-
+    // (ลบการตรวจสอบรหัสผ่าน)
     const sql = "UPDATE vote_status SET is_open = 0, deadline = NULL WHERE id = 1";
     db.run(sql, [], function(err) {
         if (err) { return res.status(500).json({ "error": err.message }); }
@@ -516,10 +536,10 @@ app.get('/results', (req, res) => {
 
 // POST /candidates - Add a new candidate
 app.post('/candidates', (req, res) => {
-    const { name, department, adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบ adminPassword ออกจาก const)
+    const { name, department } = req.body;
+    
+    // (ลบการตรวจสอบรหัสผ่าน)
     if (!name || !department) {
         return res.status(400).json({ "error": "กรุณากรอกชื่อและฝ่าย" });
     }
@@ -534,10 +554,10 @@ app.post('/candidates', (req, res) => {
 
 // PUT /candidates/:id - Edit a candidate
 app.put('/candidates/:id', (req, res) => {
-    const { name, department, adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบ adminPassword ออกจาก const)
+    const { name, department } = req.body;
+    
+    // (ลบการตรวจสอบรหัสผ่าน)
     if (!name || !department) {
         return res.status(400).json({ "error": "กรุณากรอกชื่อและฝ่าย" });
     }
@@ -551,10 +571,8 @@ app.put('/candidates/:id', (req, res) => {
 
 // DELETE /candidates/:id - Delete a candidate
 app.delete('/candidates/:id', (req, res) => {
-    const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบการตรวจสอบรหัสผ่าน)
+    
     // Note: Deleting a candidate also implicitly removes their votes,
     // but does not give back the vote permission to employees who voted for them.
     const sql = "DELETE FROM candidates WHERE id = ?";
@@ -567,10 +585,8 @@ app.delete('/candidates/:id', (req, res) => {
 
 // POST /candidates/reset - Reset candidates to default
 app.post('/candidates/reset', (req, res) => {
-    const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
-        return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
-    }
+    // (ลบการตรวจสอบรหัสผ่าน)
+    
     db.serialize(() => {
         db.run("DELETE FROM candidates"); // Clear all candidates
         db.run("DELETE FROM votes"); // IMPORTANT: Clear all vote records as well

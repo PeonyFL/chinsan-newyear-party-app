@@ -25,18 +25,17 @@ const translations = {
         vote_title: "Contest Voting", vote_subtitle: "เลือกผู้เข้าประกวดที่คุณชื่นชอบ", vote_form_id: "Your Employee ID", vote_submit_button: "Submit Vote",
         view_vote_results_button: "View Latest Results", vote_results_title: "Latest Vote Results",
         table_header_manage: "Actions", delete_button: "Delete", delete_confirm_title: "Confirm Deletion", delete_confirm_text: "Are you sure you want to delete this registration?",
-        // (ใหม่) เพิ่ม Key กีฬาสี
         sportday_button: "Sport Day Registration",
         sportday_title: "Sport Day Registration",
         sportday_subtitle: "Enter Employee ID to confirm participation",
         sportday_register_button: "Confirm Participation",
         back_to_role_selection: "Back to Main Menu",
         table_header_sportday_status: "Sport Day Status",
-        // (ใหม่) เพิ่ม Key สุ่มรางวัล
+        back_to_admin_menu: "Back to Admin Menu",
+        sportday_admin_button: "Sport Day Reg.",
         draw_time_label: "Draw Time (seconds)",
         draw_count_label: "Prizes (this round)",
         draw_next_button: "Draw Now!",
-        // Vote Status
         vote_manage_title: "Voting Settings",
         vote_status_loading: "Loading status...",
         vote_status_closed: "Status: Voting Closed",
@@ -44,15 +43,21 @@ const translations = {
         vote_start_button: "Start Voting",
         vote_status_open: "Status: Voting OPEN",
         vote_close_button: "Close Voting Now",
-        // Vote Time
         vote_countdown_label: "Time remaining:",
         vote_time_up: "Voting time has expired!",
-        // Qr Code Admin
         find_qr_button: "Find Employee QR",
-        back_to_admin_menu: "Back to Admin Menu"
+        status_check_button: "Check Participation Status",
+        status_modal_title: "Participation Status Summary",
+        status_modal_subtitle: "Summary of employees at each step.",
+        status_total: "Total Employees in System",
+        status_new_year: "✔️ New Year Registered (Got QR)",
+        status_sport_day: "✔️ Sport Day Registered",
+        status_checked_in: "✔️ Checked-in to Event",
+        status_all_three: "⭐ All Conditions Met (Eligible for Draw)",
+        add_employee_button: "Add New Employee (Manual)"
     },
     th: {
-        page_title: "Chinsan New Year Party 2025", role_selection_title: "กรุณาเลือกบทบาทของคุณ", employee_button: "พนักงาน (งานปีใหม่)", // (แก้ไข)
+        page_title: "Chinsan New Year Party 2025", role_selection_title: "กรุณาเลือกบทบาทของคุณ", employee_button: "พนักงาน (งานปีใหม่)",
         main_title: "Chinsan New Year Party 2025", main_subtitle: "กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน",
         form_firstname: "ชื่อจริง", form_lastname: "นามสกุล", form_department: "ฝ่าย", form_employee_id: "รหัสพนักงาน",
         register_button: "ลงทะเบียน", forgot_qr_link: "ลืม QR Code? / ค้นหา QR Code", search_button: "ค้นหา",
@@ -71,18 +76,16 @@ const translations = {
         vote_title: "โหวตการประกวด", vote_subtitle: "เลือกผู้เข้าประกวดที่คุณชื่นชอบ", vote_form_id: "รหัสพนักงานของคุณ", vote_submit_button: "ส่งคะแนนโหวต",
         view_vote_results_button: "ดูผลโหวตล่าสุด", vote_results_title: "ผลโหวตล่าสุด",
         table_header_manage: "จัดการ", delete_button: "ลบ", delete_confirm_title: "ยืนยันการลบ", delete_confirm_text: "คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?",
-        // (ใหม่) เพิ่ม Key กีฬาสี
         sportday_button: "ลงทะเบียนกีฬาสี",
         sportday_title: "ลงทะเบียนกีฬาสี",
         sportday_subtitle: "กรอกรหัสพนักงานเพื่อยืนยันการเข้าร่วม",
         sportday_register_button: "ยืนยันเข้าร่วม",
         back_to_role_selection: "กลับไปหน้าหลัก",
         table_header_sportday_status: "สถานะกีฬาสี",
-        // (ใหม่) เพิ่ม Key สุ่มรางวัล
+        sportday_admin_button: "ลงทะเบียนกีฬาสี",
         draw_time_label: "เวลาสุ่ม (วินาที)",
         draw_count_label: "จำนวนรางวัล (รอบนี้)",
         draw_next_button: "สุ่มรางวัล!",
-        // Vote Status
         vote_manage_title: "ตั้งค่าการโหวต",
         vote_status_loading: "กำลังโหลดสถานะ...",
         vote_status_closed: "สถานะ: ปิดโหวต",
@@ -90,12 +93,19 @@ const translations = {
         vote_start_button: "เริ่มเปิดโหวต",
         vote_status_open: "สถานะ: เปิดโหวต",
         vote_close_button: "ปิดโหวตทันที",
-        // Vote Time
         vote_countdown_label: "เวลาที่เหลือ:",
         vote_time_up: "หมดเวลาโหวตแล้ว!",
-        // Qr Code Admin
         find_qr_button: "ค้นหา QR พนักงาน",
-        back_to_admin_menu: "กลับไปหน้า Admin"
+        back_to_admin_menu: "กลับไปหน้า Admin",
+        status_check_button: "สรุปสถานะการเข้าร่วม",
+        status_modal_title: "สรุปสถานะการเข้าร่วม",
+        status_modal_subtitle: "สรุปจำนวนพนักงานที่ดำเนินการในแต่ละขั้นตอน",
+        status_total: "พนักงานทั้งหมดในระบบ",
+        status_new_year: "✔️ ลงทะเบียนปีใหม่ (รับ QR)",
+        status_sport_day: "✔️ ลงทะเบียนกีฬาสี",
+        status_checked_in: "✔️ เช็คอินเข้างาน",
+        status_all_three: "⭐ ครบทุกเงื่อนไข (มีสิทธิ์สุ่มรางวัล)",
+        add_employee_button: "เพิ่มพนักงาน (กรอกเอง)"
     }
 };
 
@@ -114,32 +124,24 @@ const checkinSection = document.getElementById('checkin-section');
 const voteSection = document.getElementById('vote-section');
 const resultDiv = document.getElementById('result');
 const realtimeResultsSection = document.getElementById('realtime-results-section');
-
-// (ใหม่) Element กีฬาสี
 const sportdaySection = document.getElementById('sportday-section');
-
 const errorToastEl = document.getElementById('errorToast');
 const errorToast = new bootstrap.Toast(errorToastEl);
 const errorMessage = document.getElementById('errorMessage');
 const successToastEl = document.getElementById('successToast');
 const successToast = new bootstrap.Toast(successToastEl);
 const successMessage = document.getElementById('successMessage');
-
 const registrationForm = document.getElementById('registrationForm');
 const findForm = document.getElementById('findForm');
 const checkinForm = document.getElementById('checkinForm');
 const voteForm = document.getElementById('voteForm');
-// (ใหม่) Form กีฬาสี
 const sportdayForm = document.getElementById('sportdayForm');
-
 const adminActionsContainer = document.getElementById('admin-actions-container');
 const adminPasswordModalEl = document.getElementById('adminPasswordModal');
 const adminPasswordModal = new bootstrap.Modal(adminPasswordModalEl);
 const adminPasswordForm = document.getElementById('adminPasswordForm');
 const adminPasswordInput = document.getElementById('admin-password-input');
 const adminPasswordError = document.getElementById('admin-password-error');
-
-// (ใหม่) Vote Period Modal Elements
 const manageVotePeriodModalEl = document.getElementById('manageVotePeriodModal');
 const manageVotePeriodModal = new bootstrap.Modal(manageVotePeriodModalEl);
 const voteStatusLoading = document.getElementById('vote-status-loading');
@@ -150,24 +152,25 @@ const voteDeadlineDisplay = document.getElementById('vote-deadline-display');
 const startVoteForm = document.getElementById('startVoteForm');
 const voteDurationInput = document.getElementById('voteDurationInput');
 const closeVoteNowBtn = document.getElementById('closeVoteNowBtn');
-// (ใหม่) Vote Countdown Elements
 const voteCountdownContainer = document.getElementById('vote-countdown-container');
 const voteCountdownTimer = document.getElementById('vote-countdown-timer');
 const adminVoteCountdown = document.getElementById('admin-vote-countdown');
-
-// (แก้ไข) เพิ่ม sportdaySection
+const statusCheckModalEl = document.getElementById('statusCheckModal');
+const statusCheckLoading = document.getElementById('status-check-loading');
+const statusCheckList = document.getElementById('status-check-list');
 const allSections = [registrationSection, findSection, employeeListSection, drawSection, checkinSection, voteSection, resultDiv, realtimeResultsSection, sportdaySection];
 const fullScreenSections = [employeeListSection, drawSection, voteSection, realtimeResultsSection];
-
 // ------------------------------ DOM Elements ------------------------------------
 
 let allEmployeeData = [];
 let realtimeIntervalId = null;
-let currentVotingEmployeeId = null; // Store Employee ID for voting
+let currentVotingEmployeeId = null;
 let employeeListIntervalId = null;
 let voteCountdownIntervalId = null;
-let adminVoteCountdownIntervalId = null; // <-- (ใหม่) ตัวนับเวลาสำหรับหน้า Admin
+let adminVoteCountdownIntervalId = null;
 let voteStatusPollIntervalId = null;
+let isAdminLoggedIn = false; // <-- (แก้ไข) ตัวแปรสำหรับจำสถานะ Admin
+
 
 // --- Language Switcher Logic ---
 function setLanguage(lang) {
@@ -189,22 +192,21 @@ function setLanguage(lang) {
 langThBtn.addEventListener('click', () => setLanguage('th'));
 langEnBtn.addEventListener('click', () => setLanguage('en'));
 
-document.addEventListener('DOMContentLoaded', async () => { // (ใหม่) เพิ่ม async
+document.addEventListener('DOMContentLoaded', async () => { 
     const savedLang = localStorage.getItem('language') || 'th';
     setLanguage(savedLang);
 
-    if (window.location.hash === '#vote') {
-        await showEmployeeView(); // (ใหม่) เพิ่ม await
+    if (window.location.hash === '#vote' || window.location.hash === '#newyear') {
+        await showEmployeeView(); 
     }
     else if (window.location.hash === '#sportday') {
         showSportdayView();
     }
 });
 
-// (ใหม่) เพิ่มตัวดักฟังการเปลี่ยนแปลง Hash (สำหรับ #vote และ #sportday)
-window.addEventListener('hashchange', async () => { // (ใหม่) เพิ่ม async
-    if (window.location.hash === '#vote') {
-        await showEmployeeView(); // (ใหม่) เพิ่ม await
+window.addEventListener('hashchange', async () => { 
+    if (window.location.hash === '#vote' || window.location.hash === '#newyear') {
+        await showEmployeeView(); 
     } 
     else if (window.location.hash === '#sportday') {
         showSportdayView(); 
@@ -218,21 +220,54 @@ document.getElementById('select-admin-btn').addEventListener('click', () => admi
 
 // (ใหม่) เพิ่ม Event Listener สำหรับปุ่ม "ค้นหา QR พนักงาน"
 document.getElementById('showFindQrPageBtn').addEventListener('click', () => {
-    // นำทาง Admin ไปยังหน้าค้นหา (findSection)
+    // (ใหม่) แสดงปุ่ม "กลับไปหน้า Admin" (เพราะนี่คือ Admin)
+    document.getElementById('backFromFindBtn').classList.remove('d-none');
+    
     navigateTo(findSection); 
+});
+
+// (ใหม่) Status Check Modal Logic
+statusCheckModalEl.addEventListener('show.bs.modal', async () => {
+    statusCheckLoading.classList.remove('d-none');
+    statusCheckList.classList.add('d-none');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/employees/status-summary`);
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "Failed to load summary");
+
+        document.getElementById('status-total').innerText = result.data.total;
+        document.getElementById('status-new-year').innerText = result.data.new_year;
+        document.getElementById('status-sport-day').innerText = result.data.sport_day;
+        document.getElementById('status-checked-in').innerText = result.data.checked_in;
+        document.getElementById('status-all-three').innerText = result.data.all_three;
+
+        statusCheckLoading.classList.add('d-none');
+        statusCheckList.classList.remove('d-none');
+
+    } catch (err) {
+        displayError(`ไม่สามารถโหลดสรุปสถานะได้: ${err.message}`);
+        bootstrap.Modal.getInstance(statusCheckModalEl).hide();
+    }
 });
 
 // (ใหม่) เพิ่ม Event Listener สำหรับปุ่ม "กลับไปหน้า Admin"
 document.getElementById('backFromFindBtn').addEventListener('click', () => {
-    // ปุ่มนี้มีไว้สำหรับ Admin เท่านั้น
-    // ดังนั้น ให้กลับไปที่หน้าเมนู Admin (registrationSection)
-    navigateTo(registrationSection); //
+    navigateTo(registrationSection); 
+});
+// (ใหม่) Event Listener สำหรับปุ่ม "เพิ่มพนักงาน (กรอกเอง)"
+document.getElementById('showAddEmployeeFormBtn').addEventListener('click', () => {
+    registrationForm.classList.toggle('d-none'); 
+});
+
+// (ใหม่) Event Listener สำหรับปุ่ม "ลงทะเบียนกีฬาสี" (Admin)
+document.getElementById('showSportdayPageBtnAdmin').addEventListener('click', () => {
+    showSportdayView(); 
 });
 
 
 // (ใหม่) Manage Vote Period Logic
 manageVotePeriodModalEl.addEventListener('show.bs.modal', loadVoteStatus);
-// (ใหม่) Clear admin timer เมื่อ modal ถูกซ่อน/ปิด
 manageVotePeriodModalEl.addEventListener('hide.bs.modal', () => {
     if (adminVoteCountdownIntervalId) {
         clearInterval(adminVoteCountdownIntervalId);
@@ -252,16 +287,12 @@ async function loadVoteStatus() {
         if (!res.ok) throw new Error(result.error || `Error ${res.status}`);
 
         if (result.is_open) {
-            // Voting is OPEN
             const deadline = new Date(result.deadline);
             voteDeadlineDisplay.innerText = `ปิดโหวตเวลา ${deadline.toLocaleString('th-TH')}`;
             voteStatusOpen.classList.remove('d-none');
-
             startAdminCountdown(result.deadline);
         } else {
-            // Voting is CLOSED
             voteStatusClosed.classList.remove('d-none');
-
             if (adminVoteCountdownIntervalId) {
                 clearInterval(adminVoteCountdownIntervalId);
                 adminVoteCountdownIntervalId = null;
@@ -279,14 +310,14 @@ async function loadVoteStatus() {
 startVoteForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const duration = voteDurationInput.value;
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
+    
+    if (!confirm("ยืนยันการเริ่มโหวต?")) return;
 
     try {
         const res = await fetch(`${API_BASE_URL}/vote/start`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ durationInMinutes: duration, adminPassword })
+            body: JSON.stringify({ durationInMinutes: duration })
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || `Error ${res.status}`);
@@ -299,15 +330,12 @@ startVoteForm.addEventListener('submit', async (e) => {
 });
 
 closeVoteNowBtn.addEventListener('click', async () => {
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
-
     if (confirm("คุณแน่ใจหรือไม่ว่าต้องการ 'ปิดโหวต' ทันที?")) {
         try {
             const res = await fetch(`${API_BASE_URL}/vote/close`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminPassword })
+                body: JSON.stringify({})
             });
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || `Error ${res.status}`);
@@ -322,15 +350,32 @@ closeVoteNowBtn.addEventListener('click', async () => {
 
 
 // --- (ใหม่) Navigation สำหรับกีฬาสี ---
-document.getElementById('select-sportday-btn').addEventListener('click', showSportdayView);
-
-document.getElementById('backFromSportdayBtn').addEventListener('click', () => {
-    // กลับไปหน้าเลือก Role
-    appSections.classList.add('d-none');
-    roleSelectionSection.classList.remove('d-none');
-    mainCard.classList.remove('fullscreen');
-    allSections.forEach(sec => sec.classList.add('d-none'));
+document.getElementById('select-sportday-btn').addEventListener('click', () => {
+    isAdminLoggedIn = false; // <-- (แก้ไข) เคลียร์สถานะ Admin
+    showSportdayView(); 
 });
+
+
+/// (แก้ไข) Event Listener ของปุ่ม "กลับ" ในหน้ากีฬาสี
+document.getElementById('backFromSportdayBtn').addEventListener('click', () => {
+    // (แก้ไข) ตรวจสอบจากตัวแปร 'isAdminLoggedIn'
+    if (isAdminLoggedIn) {
+        // ถ้าเป็น Admin, ให้กลับไปหน้าเมนู Admin (registrationSection)
+
+        // [ *** เพิ่มบรรทัดนี้ *** ]
+        // ต้องเปิดเมนู Admin กลับมาด้วย เพราะ 'showSportdayView' ได้ซ่อนไป
+        adminActionsContainer.classList.remove('d-none'); 
+        
+        navigateTo(registrationSection);
+    } else {
+        // ถ้าเป็นพนักงาน (เข้าจากปุ่มแรก), ให้กลับไปหน้าเลือก Role
+        appSections.classList.add('d-none');
+        roleSelectionSection.classList.remove('d-none');
+        mainCard.classList.remove('fullscreen');
+        allSections.forEach(sec => sec.classList.add('d-none'));
+    }
+});
+
 
 // (ใหม่) ฟังก์ชันสำหรับเปิดหน้ากีฬาสี
 function showSportdayView() {
@@ -346,9 +391,10 @@ function showSportdayView() {
 
 document.getElementById('showFindFormLink').addEventListener('click', (e) => { e.preventDefault(); navigateTo(findSection); });
 document.getElementById('showRegisterFormLink').addEventListener('click', (e) => { e.preventDefault(); navigateTo(registrationSection); });
+
+// (แก้ไข) backToFormBtn (ปุ่มกลับจากหน้า QR) ให้ใช้ isAdminLoggedIn
 document.getElementById('backToFormBtn').addEventListener('click', () => {
-    const isAdmin = !adminActionsContainer.classList.contains('d-none');
-    navigateTo(isAdmin ? registrationSection : findSection);
+    navigateTo(isAdminLoggedIn ? registrationSection : findSection);
 });
 document.getElementById('viewEmployeesBtn').addEventListener('click', showEmployeeList);
 document.getElementById('backFromListBtn').addEventListener('click', () => navigateTo(registrationSection));
@@ -382,24 +428,18 @@ document.getElementById('managePrizesBtnAdmin').addEventListener('click', () => 
 });
 
 function navigateTo(sectionToShow) {
-    // Stop real-time vote polling if not on that page
-    if (realtimeIntervalId && sectionToShow !== realtimeResultsSection) { //
-        clearInterval(realtimeIntervalId); //
-        realtimeIntervalId = null; //
+    if (realtimeIntervalId && sectionToShow !== realtimeResultsSection) { 
+        clearInterval(realtimeIntervalId); 
+        realtimeIntervalId = null; 
     }
-    // (ใหม่) หยุดการ Polling สถานะโหวต เมื่อไม่ได้อยู่หน้าโหวต
     if (voteStatusPollIntervalId && sectionToShow !== voteSection) {
         clearInterval(voteStatusPollIntervalId);
         voteStatusPollIntervalId = null;
     }
-
-    // (ใหม่) หยุดการนับถอยหลัง (ของพนักงาน) เมื่อไม่ได้อยู่หน้าโหวต
     if (voteCountdownIntervalId && sectionToShow !== voteSection) {
         clearInterval(voteCountdownIntervalId);
         voteCountdownIntervalId = null;
     }
-
-    // (ใหม่) หยุดการ Polling รายชื่อพนักงาน เมื่อไม่ได้อยู่หน้ารายชื่อ
     if (employeeListIntervalId && sectionToShow !== employeeListSection) {
         clearInterval(employeeListIntervalId);
         employeeListIntervalId = null;
@@ -407,15 +447,15 @@ function navigateTo(sectionToShow) {
 
     allSections.forEach(sec => sec.classList.add('d-none'));
     sectionToShow.classList.remove('d-none');
-    // (คงเดิม) ส่วนนี้ถูกต้องแล้ว เพราะ main header จะถูกซ่อนในหน้า sportday
     mainHeaderContainer.classList.toggle('d-none', sectionToShow !== registrationSection && sectionToShow !== findSection); 
     mainCard.classList.toggle('fullscreen', fullScreenSections.includes(sectionToShow));
 
-    const isAdmin = !adminActionsContainer.classList.contains('d-none');
+    // (แก้ไข) ใช้ isAdminLoggedIn ที่เราตั้งไว้
     if (sectionToShow === registrationSection) {
-         document.getElementById('managePrizesBtnAdmin').classList.toggle('d-none', !isAdmin);
-         document.getElementById('manageCandidatesBtn').classList.toggle('d-none', !isAdmin);
-         document.getElementById('showRealtimeResultsBtn').classList.toggle('d-none', !isAdmin);
+        registrationForm.classList.add('d-none');
+         document.getElementById('managePrizesBtnAdmin').classList.toggle('d-none', !isAdminLoggedIn);
+         document.getElementById('manageCandidatesBtn').classList.toggle('d-none', !isAdminLoggedIn);
+         document.getElementById('showRealtimeResultsBtn').classList.toggle('d-none', !isAdminLoggedIn);
     }
     if (sectionToShow !== voteSection) {
         resetVotePageUI();
@@ -424,14 +464,17 @@ function navigateTo(sectionToShow) {
 function displayError(message) { errorMessage.innerText = message || 'เกิดข้อผิดพลาดบางอย่าง'; errorToast.show(); }
 function displaySuccess(message) { successMessage.innerText = message || 'ดำเนินการสำเร็จ'; successToast.show(); }
 
-async function showEmployeeView() { // (ใหม่) เพิ่ม async
+// (แก้ไข) ลบฟังก์ชันที่ซ้อนกันออก
+async function showEmployeeView() { 
+    isAdminLoggedIn = false; // <-- (แก้ไข) เคลียร์สถานะ Admin
     roleSelectionSection.classList.add('d-none');
     appSections.classList.remove('d-none');
     adminActionsContainer.classList.add('d-none');
 
-    // Check the URL hash
+    document.getElementById('backFromFindBtn').classList.add('d-none');
+
     if (window.location.hash === '#vote') {
-        await showVotePage(); // (ใหม่) เพิ่ม await
+        await showVotePage(); 
     } else {
         navigateTo(findSection); 
     }
@@ -441,6 +484,7 @@ function showAdminView() {
     roleSelectionSection.classList.add('d-none');
     appSections.classList.remove('d-none');
     adminActionsContainer.classList.remove('d-none');
+    registrationForm.classList.add('d-none');
     navigateTo(registrationSection);
 }
 adminPasswordForm.addEventListener('submit', (e) => {
@@ -451,6 +495,7 @@ adminPasswordForm.addEventListener('submit', (e) => {
         adminPasswordModal.hide();
         adminPasswordInput.value = '';
         adminPasswordError.innerText = '';
+        isAdminLoggedIn = true; // <-- (แก้ไข) ตั้งสถานะ Admin เป็น "จริง"
         showAdminView();
     } else {
         adminPasswordError.innerText = 'รหัสผ่านไม่ถูกต้อง';
@@ -460,14 +505,14 @@ adminPasswordForm.addEventListener('submit', (e) => {
 // --- Main Application Logic ---
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin เพื่อยืนยันการเพิ่มพนักงาน:");
-    if (!adminPassword) return;
+    
+    if (!confirm("ยืนยันการเพิ่มพนักงาน?")) return;
+
     const employeeData = {
         firstName: document.getElementById('firstName').value,
         lastName: document.getElementById('lastName').value,
         department: document.getElementById('department').value,
-        employeeId: document.getElementById('employeeId').value.toUpperCase(),
-        adminPassword: adminPassword
+        employeeId: document.getElementById('employeeId').value.toUpperCase()
     };
     try {
         const res = await fetch(`${API_BASE_URL}/add-employee`, {
@@ -488,21 +533,16 @@ registrationForm.addEventListener('submit', async (e) => {
 });
 findForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('findEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } });
 checkinForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('checkinEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const response = await fetch(`${API_BASE_URL}/checkin`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ employeeId }) }); const result = await response.json(); const container = document.getElementById('checkinResultContainer'); container.classList.remove('d-none'); if (response.ok) { container.innerHTML = `<div class="alert alert-success d-flex align-items-center"><div class="status-icon me-3">✔️</div><div><h4 class="alert-heading">เช็คอินสำเร็จ</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.firstName} ${result.data.lastName}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>รหัสพนักงาน:</strong> ${result.data.employeeId}</p></div></div>`; } else if (response.status === 409) { const checkinTime = new Date(result.data.checkin_time).toLocaleString('th-TH'); container.innerHTML = `<div class="alert alert-warning d-flex align-items-center"><div class="status-icon me-3">⚠️</div><div><h4 class="alert-heading">เช็คอินไปแล้ว</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.firstName} ${result.data.lastName}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>เวลาที่เช็คอิน:</strong> ${checkinTime}</p></div></div>`; } else { container.innerHTML = `<div class="alert alert-danger d-flex align-items-center"><div class="status-icon me-3">❌</div><div><h4 class="alert-heading">ไม่พบข้อมูล</h4><p class="mb-0">กรุณาตรวจสอบรหัสพนักงานอีกครั้ง</p></div></div>`; } } catch (error) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } checkinForm.reset(); });
-// (ใหม่) --- ฟังก์ชันที่ 1: ดึงข้อมูลและอัปเดตตาราง (Core Logic) ---
+
 async function fetchAndRenderEmployees() {
     try {
-        const res = await fetch(`${API_BASE_URL}/employees`); //
+        const res = await fetch(`${API_BASE_URL}/employees`); 
         const result = await res.json();
-
         if (res.ok) {
-            allEmployeeData = result.data; //
-
-            // (สำคัญ) ตรวจสอบว่าผู้ใช้กำลังค้นหาอยู่หรือไม่
+            allEmployeeData = result.data; 
             const searchTerm = document.getElementById('employeeSearchInput').value.toLowerCase().trim();
             let dataToRender;
-
             if (searchTerm) {
-                // ถ้ากำลังค้นหา ให้กรองข้อมูลใหม่ตามคำค้นหาเดิม
                 dataToRender = allEmployeeData.filter(emp =>
                     emp.first_name.toLowerCase().includes(searchTerm) ||
                     emp.last_name.toLowerCase().includes(searchTerm) ||
@@ -510,14 +550,10 @@ async function fetchAndRenderEmployees() {
                     (emp.department && emp.department.toLowerCase().includes(searchTerm))
                 );
             } else {
-                // ถ้าไม่ได้ค้นหา ก็แสดงข้อมูลใหม่ทั้งหมด
                 dataToRender = allEmployeeData;
             }
-
-            renderEmployeeTable(dataToRender); //
-
+            renderEmployeeTable(dataToRender); 
         } else {
-            // ถ้าการดึงข้อมูลเบื้องหลังล้มเหลว ให้หยุด Polling
             console.error("Failed to auto-refresh employee list:", result.error);
             if (employeeListIntervalId) {
                 clearInterval(employeeListIntervalId);
@@ -525,7 +561,6 @@ async function fetchAndRenderEmployees() {
             }
         }
     } catch (err) {
-        // ถ้าเชื่อมต่อไม่ได้ ให้หยุด Polling
         console.error("Failed to connect for auto-refresh:", err.message);
         if (employeeListIntervalId) {
             clearInterval(employeeListIntervalId);
@@ -533,20 +568,11 @@ async function fetchAndRenderEmployees() {
         }
     }
 }
-
-// (ใหม่) --- ฟังก์ชันที่ 2: ใช้สำหรับกดปุ่ม (Navigation & Starting Polling) ---
 async function showEmployeeList() {
-    // 1. นำทางไปยังหน้า List
-    navigateTo(employeeListSection); //
-    document.getElementById('employeeSearchInput').value = ''; //
-
-    // 2. หยุดการ Polling เก่า (ถ้ามี)
+    navigateTo(employeeListSection); 
+    document.getElementById('employeeSearchInput').value = ''; 
     if (employeeListIntervalId) clearInterval(employeeListIntervalId);
-
-    // 3. ดึงข้อมูลครั้งแรกทันที
     await fetchAndRenderEmployees();
-
-    // 4. เริ่มการ Polling ใหม่ (อัปเดตทุก 5 วินาที)
     employeeListIntervalId = setInterval(fetchAndRenderEmployees, 5000); 
 }
 function renderEmployeeTable(dataToRender) {
@@ -583,7 +609,6 @@ function renderEmployeeTable(dataToRender) {
     });
     
     document.querySelector('[data-key="table_header_manage"]').innerText = translations[currentLang]['table_header_manage'];
-    // (ใหม่) เพิ่มการแปลหัวข้อสถานะกีฬาสี
     const sportDayHeader = document.querySelector('[data-key="table_header_sportday_status"]');
     if (sportDayHeader) {
         sportDayHeader.innerText = translations[currentLang]['table_header_sportday_status'];
@@ -605,25 +630,29 @@ document.getElementById('employeeTableContainer').addEventListener('click', asyn
         const employeeId = e.target.dataset.id;
         const currentLang = localStorage.getItem('language') || 'th';
         const confirmText = translations[currentLang].delete_confirm_text;
+        
         if (confirm(confirmText)) {
-            const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin เพื่อยืนยันการลบ:");
-            if (adminPassword) {
-                try {
-                    const res = await fetch(`${API_BASE_URL}/employees/${employeeId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminPassword: adminPassword }) });
-                    const result = await res.json();
-                    if (res.ok) {
-                        displaySuccess('ลบข้อมูลสำเร็จ');
-                        showEmployeeList();
-                    } else {
-                        displayError(result.error || 'เกิดข้อผิดพลาดในการลบข้อมูล');
-                    }
-                } catch (err) {
-                    displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            try {
+                const res = await fetch(`${API_BASE_URL}/employees/${employeeId}`, { 
+                    method: 'DELETE', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({}) 
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    displaySuccess('ลบข้อมูลสำเร็จ');
+                    showEmployeeList();
+                } else {
+                    displayError(result.error || 'เกิดข้อผิดพลาดในการลบข้อมูล');
                 }
+            } catch (err) {
+                displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
             }
         }
     }
 });
+
+// (คงไว้) จุดเดียวที่ยังถามรหัสผ่าน
 document.getElementById('deleteAllEmployeesBtn').addEventListener('click', async () => {
     const currentLang = localStorage.getItem('language') || 'th';
     if (!confirm(translations[currentLang].delete_confirm_text + " (ข้อมูล *ทั้งหมด* รวมถึงผลโหวต)")) {
@@ -671,7 +700,6 @@ const drawElements = {
     drawCountInput: document.getElementById('drawCountInput')
 };
 let allWinners = [], allEmployees = [], currentWinnerIndex = 0;
-let drawAnimationTime = 3000;
 async function loadPrizesToDisplay() {
     try {
         const res = await fetch(`${API_BASE_URL}/prizes`);
@@ -679,7 +707,7 @@ async function loadPrizesToDisplay() {
         if (res.ok) {
             drawElements.prizeList.innerHTML = result.data
                 .map(prize => `<li class="list-group-item">${prize.name}</li>`)
-                .join('') || '<li class="list-group-item text-muted">ยังไม่มีรางวัล</li>'; // Handle empty case
+                .join('') || '<li class="list-group-item text-muted">ยังไม่มีรางวัล</li>'; 
         } else {
             drawElements.prizeList.innerHTML = `<li class="list-group-item text-danger">${result.error || 'Failed to load prizes'}</li>`;
         }
@@ -701,16 +729,16 @@ async function setupNewDraw() {
     drawElements.startBtn.disabled = true;
     drawElements.startBtn.innerText = 'กำลังเตรียมข้อมูล...';
     try {
-        await loadPrizesToDisplay(); // Refresh prize list just in case
+        await loadPrizesToDisplay(); 
         const [winRes, empRes] = await Promise.all([
-            fetch(`${API_BASE_URL}/draw`), // Gets checked-in winners based on prize count
-            fetch(`${API_BASE_URL}/employees`) // Gets all employees for shuffle animation
+            fetch(`${API_BASE_URL}/draw`), 
+            fetch(`${API_BASE_URL}/employees`) 
         ]);
         if (!winRes.ok) { throw new Error((await winRes.json()).error || 'Failed to fetch draw data'); }
         if (!empRes.ok) { throw new Error((await empRes.json()).error || 'Failed to fetch employee data'); }
         allWinners = (await winRes.json()).data;
         allEmployees = (await empRes.json()).data;
-        if (allEmployees.length === 0) { // Need at least one employee for animation
+        if (allEmployees.length === 0) { 
              throw new Error('ยังไม่มีข้อมูลพนักงานในระบบสำหรับใช้ในการสุ่ม');
         }
         currentWinnerIndex = 0;
@@ -728,48 +756,31 @@ async function setupNewDraw() {
          drawElements.startBtn.innerText = translations[localStorage.getItem('language') || 'th']['start_draw_button'];
     }
 }
-// (ใหม่) Event Listener ที่รองรับการสุ่มทีละหลายรางวัล
 drawElements.nextBtn.addEventListener('click', async () => {
-    // 1. อ่านค่าจาก input ทุกครั้งที่กด
     const count = parseInt(drawElements.drawCountInput.value) || 1;
     const time = (parseInt(drawElements.drawTimeInput.value) || 3) * 1000;
-
-    if (currentWinnerIndex >= allWinners.length) return; // (เหมือนเดิม)
-
-    drawElements.nextBtn.disabled = true; // (เหมือนเดิม)
-
-    // 2. วน Loop ตามจำนวน (count) ที่กำหนด
+    if (currentWinnerIndex >= allWinners.length) return; 
+    drawElements.nextBtn.disabled = true; 
     for (let i = 0; i < count; i++) {
-        // ตรวจสอบว่ายังมีผู้โชคดีเหลือหรือไม่
         if (currentWinnerIndex >= allWinners.length) {
             drawElements.currentPrize.innerText = "จับรางวัลครบแล้ว!";
-            break; // ออกจาก Loop ถ้าสุ่มครบแล้ว
+            break; 
         }
-
-        // อัปเดตชื่อรางวัลที่จะสุ่ม *ก่อน* เริ่มอนิเมชัน
         updatePrizeDisplay(); 
-
         const winner = allWinners[currentWinnerIndex];
-
-        // ส่ง "time" ที่อ่านมาเข้าไปในฟังก์ชัน
         await runSingleDrawAnimation(winner, time); 
-
-        currentWinnerIndex++; // (เหมือนเดิม)
+        currentWinnerIndex++; 
     }
-
-    // 3. ตรวจสอบสถานะหลัง Loop
     if (currentWinnerIndex < allWinners.length) {
-        // ถ้ายังเหลือผู้โชคดี
-        updatePrizeDisplay(); // อัปเดตชื่อรางวัลถัดไป
-        drawElements.nextBtn.disabled = false; // เปิดปุ่ม
+        updatePrizeDisplay(); 
+        drawElements.nextBtn.disabled = false; 
     } else {
-        // ถ้าสุ่มครบหมดแล้ว
         drawElements.nextBtn.classList.add('d-none');
         drawElements.resetBtn.classList.remove('d-none');
         drawElements.currentPrize.innerText = "จับรางวัลครบแล้ว!";
     }
 });
-drawElements.resetBtn.addEventListener('click', () => { showDrawPage(); /* Reload the draw page to reset */ });
+drawElements.resetBtn.addEventListener('click', () => { showDrawPage(); });
 async function runSingleDrawAnimation(winner, animationTime) {
     const shuffle = setInterval(() => {
         const rand = allEmployees[Math.floor(Math.random() * allEmployees.length)];
@@ -781,7 +792,7 @@ async function runSingleDrawAnimation(winner, animationTime) {
     drawElements.slotName.innerText = `${winner.first_name} ${winner.last_name}`;
     drawElements.slotId.innerText = winner.employee_id;
     const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')).map(li => li.innerText);
-    const prize = prizes[currentWinnerIndex]; // Get prize name based on current index
+    const prize = prizes[currentWinnerIndex]; 
     drawElements.winnersContainer.classList.remove('d-none');
     const li = document.createElement('li');
     li.className = 'list-group-item';
@@ -819,12 +830,10 @@ async function loadPrizesToManager() {
     }
 }
 prizeListContainer.addEventListener('click', async (e) => {
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
     if (e.target.classList.contains('btn-delete-prize')) {
         const prizeId = e.target.dataset.id;
         if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรางวัลนี้?")) {
-            await deletePrize(prizeId, adminPassword);
+            await deletePrize(prizeId);
         }
     }
     if (e.target.classList.contains('btn-edit-prize')) {
@@ -832,28 +841,29 @@ prizeListContainer.addEventListener('click', async (e) => {
         const currentName = e.target.dataset.name;
         const newName = prompt("แก้ไขชื่อรางวัล:", currentName);
         if (newName && newName !== currentName) {
-            await editPrize(prizeId, newName, adminPassword);
+            if (confirm("ยืนยันการแก้ไขชื่อรางวัล?")) {
+                await editPrize(prizeId, newName);
+            }
         }
     }
 });
 addPrizeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const newName = newPrizeNameInput.value.trim(); // Trim whitespace
+    const newName = newPrizeNameInput.value.trim(); 
     if (!newName) { displayError("กรุณากรอกชื่อรางวัล"); return; }
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
-    await addPrize(newName, adminPassword);
+    
+    if (!confirm("ยืนยันการเพิ่มรางวัล?")) return;
+
+    await addPrize(newName);
     newPrizeNameInput.value = '';
 });
 resetPrizesBtn.addEventListener('click', async () => {
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
     if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรางวัลทั้งหมด และรีเซ็ตเป็นค่าเริ่มต้น?")) {
         try {
             const res = await fetch(`${API_BASE_URL}/prizes/reset`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminPassword })
+                body: JSON.stringify({})
             });
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || 'Failed to reset prizes');
@@ -864,12 +874,12 @@ resetPrizesBtn.addEventListener('click', async () => {
         }
     }
 });
-async function addPrize(name, adminPassword) {
+async function addPrize(name) {
     try {
         const res = await fetch(`${API_BASE_URL}/prizes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, adminPassword })
+            body: JSON.stringify({ name })
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Failed to add prize');
@@ -879,12 +889,12 @@ async function addPrize(name, adminPassword) {
         displayError(err.message);
     }
 }
-async function editPrize(id, name, adminPassword) {
+async function editPrize(id, name) {
     try {
         const res = await fetch(`${API_BASE_URL}/prizes/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, adminPassword })
+            body: JSON.stringify({ name })
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Failed to edit prize');
@@ -894,12 +904,12 @@ async function editPrize(id, name, adminPassword) {
         displayError(err.message);
     }
 }
-async function deletePrize(id, adminPassword) {
+async function deletePrize(id) {
      try {
         const res = await fetch(`${API_BASE_URL}/prizes/${id}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminPassword })
+            body: JSON.stringify({})
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Failed to delete prize');
@@ -926,115 +936,83 @@ const voteElements = {
 };
 
 function resetVotePageUI() {
-    // (ใหม่) หยุดการนับถอยหลัง (ถ้ามี)
     if (voteCountdownIntervalId) {
         clearInterval(voteCountdownIntervalId);
         voteCountdownIntervalId = null;
     }
-
-    // (ใหม่) หยุดการ Polling สถานะ (ถ้ามี)
     if (voteStatusPollIntervalId) {
         clearInterval(voteStatusPollIntervalId);
         voteStatusPollIntervalId = null;
     }
-    // (ใหม่) ซ่อนและรีเซ็ตกล่องนับเวลา
     if (voteCountdownContainer) { 
         voteCountdownContainer.classList.add('d-none');
         voteCountdownContainer.classList.remove('alert-danger');
         voteCountdownContainer.classList.add('alert-info');
     }
-    // (ใหม่) ลบข้อความ "หมดเวลา" (ถ้ามี)
     const timeUpMsg = document.getElementById('vote-time-up-msg');
     if (timeUpMsg) {
         timeUpMsg.remove();
     }
-    // (ใหม่) แสดงฟอร์มโหวตอีกครั้ง (เผื่อถูกซ่อน)
     const voteForm = document.getElementById('voteForm');
     if (voteForm) {
         voteForm.classList.remove('d-none');
     }
-
     voteElements.eligibilityCheckDiv.classList.remove('d-none');
     voteElements.mainVoteArea.classList.add('d-none');
     voteElements.employeeIdInput.value = '';
-    voteElements.employeeIdInput.disabled = false; // Re-enable input
+    voteElements.employeeIdInput.disabled = false; 
     voteElements.eligibilityMessage.innerText = '';
     voteElements.candidateList.innerHTML = '';
     voteElements.resultsContainer.classList.add('d-none');
     currentVotingEmployeeId = null;
     voteElements.form.reset();
-     // Reset check button state if needed
     voteElements.checkEligibilityBtn.disabled = false;
     voteElements.checkEligibilityBtn.innerText = 'ตรวจสอบสิทธิ์';
 }
 
-async function showVotePage() { // (ใหม่) เพิ่ม async
+async function showVotePage() { 
     navigateTo(voteSection);
-
     const backBtn = document.getElementById('backFromVoteBtn');
     if (window.location.hash === '#vote') {
         backBtn.classList.add('d-none');
-
-        // (ใหม่) หยุดการ Polling เก่า (ถ้ามี)
         if (voteStatusPollIntervalId) clearInterval(voteStatusPollIntervalId);
-
-        // (แก้ไข) ตรวจสอบสถานะโหวตทันที
         try {
             const res = await fetch(`${API_BASE_URL}/vote-status`);
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Failed to fetch status");
-
             if (!result.is_open) {
-                // --- 1. ถ้าโหวตปิด ---
                 const lang = localStorage.getItem('language') || 'th';
-                voteElements.eligibilityMessage.innerText = translations[lang]['vote_status_closed']; // "สถานะ: ปิดโหวต"
-                voteElements.eligibilityMessage.classList.remove('d-none'); // แสดงข้อความ
-                voteElements.eligibilityCheckDiv.classList.add('d-none'); // ซ่อนฟอร์ม
-
-                // (ใหม่) เริ่ม POLLING เพื่อรอระบบเปิด
+                voteElements.eligibilityMessage.innerText = translations[lang]['vote_status_closed']; 
+                voteElements.eligibilityMessage.classList.remove('d-none'); 
+                voteElements.eligibilityCheckDiv.classList.add('d-none'); 
                 voteStatusPollIntervalId = setInterval(async () => {
-                    console.log("Polling for vote status..."); // (สำหรับ Debug)
+                    console.log("Polling for vote status..."); 
                     try {
                         const pollRes = await fetch(`${API_BASE_URL}/vote-status`);
                         const pollResult = await pollRes.json();
-
                         if (pollResult.is_open) {
-                            // --- เย้! ระบบเปิดแล้ว ---
                             console.log("Voting is NOW OPEN!");
-
-                            // 1. หยุด Polling
                             clearInterval(voteStatusPollIntervalId);
                             voteStatusPollIntervalId = null;
-
-                            // 2. ซ่อนข้อความ "ปิดโหวต"
                             voteElements.eligibilityMessage.classList.add('d-none');
                             voteElements.eligibilityMessage.innerText = '';
-
-                            // 3. แสดงฟอร์มตรวจสอบสิทธิ์
                             voteElements.eligibilityCheckDiv.classList.remove('d-none');
                         }
-                        // (ถ้าระบบยังไม่เปิด ก็ไม่ต้องทำอะไร รอ Polling รอบถัดไป)
-
                     } catch (pollErr) {
-                        // (ถ้า Polling ล้มเหลว ให้หยุด)
                         clearInterval(voteStatusPollIntervalId);
                         voteStatusPollIntervalId = null;
                     }
-                }, 3000); // ตรวจสอบทุก 3 วินาที
-
+                }, 3000); 
             } else {
-                // --- 2. ถ้าโหวตเปิดอยู่แล้ว ---
-                voteElements.eligibilityMessage.classList.add('d-none'); // ซ่อนข้อความ
-                voteElements.eligibilityCheckDiv.classList.remove('d-none'); // แสดงฟอร์ม
+                voteElements.eligibilityMessage.classList.add('d-none'); 
+                voteElements.eligibilityCheckDiv.classList.remove('d-none'); 
             }
         } catch (err) {
             voteElements.eligibilityMessage.innerText = `ไม่สามารถโหลดสถานะโหวตได้: ${err.message}`;
             voteElements.eligibilityMessage.classList.remove('d-none');
-            voteElements.eligibilityCheckDiv.classList.add('d-none'); // ซ่อนฟอร์ม
+            voteElements.eligibilityCheckDiv.classList.add('d-none'); 
         }
-
     } else {
-        // (โค้ดส่วน Admin เหมือนเดิม)
         backBtn.classList.remove('d-none');
         voteElements.eligibilityCheckDiv.classList.remove('d-none');
     }
@@ -1049,25 +1027,19 @@ voteElements.checkEligibilityBtn.addEventListener('click', async () => {
     voteElements.eligibilityMessage.innerText = '';
     voteElements.checkEligibilityBtn.disabled = true;
     voteElements.checkEligibilityBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังตรวจสอบ...';
-
     try {
         const res = await fetch(`${API_BASE_URL}/check-vote-eligibility/${employeeId}`);
         const result = await res.json();
-
         if (res.ok && result.status === 'eligible') {
             currentVotingEmployeeId = employeeId;
             voteElements.eligibilityCheckDiv.classList.add('d-none');
             voteElements.voteUserMessage.innerText = `รหัสพนักงาน: ${employeeId} (${result.message})`;
             voteElements.mainVoteArea.classList.remove('d-none');
             await loadCandidatesForVoting();
-
-            // (ใหม่) เริ่มนับถอยหลัง
             if (result.deadline) {
                 startVoteCountdown(result.deadline); 
             }
-
         } else {
-            // Display specific error from server
             voteElements.eligibilityMessage.innerText = result.message || `เกิดข้อผิดพลาด (${res.status})`;
         }
     } catch (err) {
@@ -1093,7 +1065,7 @@ async function loadCandidatesForVoting() {
         }
     } catch (err) {
         displayError(`ไม่สามารถโหลดรายชื่อผู้เข้าประกวด: ${err.message}`);
-        resetVotePageUI(); // Reset if candidates can't load
+        resetVotePageUI(); 
     }
 }
 
@@ -1109,11 +1081,9 @@ voteElements.form.addEventListener('submit', async (e) => {
          resetVotePageUI();
          return;
     }
-
     const submitButton = voteElements.form.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังส่ง...';
-
     try {
         const res = await fetch(`${API_BASE_URL}/vote`, {
              method: 'POST',
@@ -1123,10 +1093,9 @@ voteElements.form.addEventListener('submit', async (e) => {
         const result = await res.json();
         if (res.ok) {
             displaySuccess('โหวตสำเร็จ!');
-            resetVotePageUI(); // Go back to entering ID after voting
+            resetVotePageUI(); 
         } else {
              displayError(result.error || 'ไม่สามารถส่งผลโหวตได้');
-             // If the error was specifically "already voted", keep the message, otherwise reset.
              if(res.status !== 409) {
                 resetVotePageUI();
              }
@@ -1154,40 +1123,29 @@ async function loadVoteResults() {
         }
     } catch (err) {
         displayError(`ไม่สามารถโหลดผลโหวตได้: ${err.message}`);
-         voteElements.resultsContainer.classList.add('d-none'); // Hide if error
+         voteElements.resultsContainer.classList.add('d-none'); 
     }
 }
 // (ใหม่) --- Logic Countdown Timer ---
 function startVoteCountdown(deadlineISO) {
-    // Clear timer เก่า (ถ้ามี)
     if (voteCountdownIntervalId) {
         clearInterval(voteCountdownIntervalId);
     }
-
     const deadline = new Date(deadlineISO).getTime();
-    voteCountdownContainer.classList.remove('d-none'); // แสดงกล่องนับเวลา
-
+    voteCountdownContainer.classList.remove('d-none'); 
     const updateTimer = () => {
         const now = new Date().getTime();
         const distance = deadline - now;
-
         if (distance <= 0) {
-            // --- เมื่อหมดเวลา ---
             clearInterval(voteCountdownIntervalId);
             voteCountdownIntervalId = null;
             voteCountdownTimer.innerText = "00:00";
-
-            // เปลี่ยนสีกล่องเป็นสีแดง
             voteCountdownContainer.classList.remove('alert-info');
             voteCountdownContainer.classList.add('alert-danger');
-
-            // ซ่อนฟอร์มโหวต
             const voteForm = document.getElementById('voteForm');
             if (voteForm) {
                 voteForm.classList.add('d-none'); 
             }
-
-            // แสดงข้อความ "หมดเวลา"
             let timeUpMsg = document.getElementById('vote-time-up-msg');
             if (!timeUpMsg) {
                 timeUpMsg = document.createElement('div');
@@ -1197,74 +1155,50 @@ function startVoteCountdown(deadlineISO) {
                 timeUpMsg.innerText = translations[lang]['vote_time_up'];
                 voteElements.mainVoteArea.appendChild(timeUpMsg);
             }
-
         } else {
-            // --- ถ้ายังไม่หมดเวลา ---
-            // คำนวณเวลา
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            // แสดงผล 00:00
             voteCountdownTimer.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-            // ตั้งค่าสีกล่อง (เผื่อไว้)
             voteCountdownContainer.classList.remove('alert-danger');
             voteCountdownContainer.classList.add('alert-info');
         }
     };
-
-    updateTimer(); // เรียกครั้งแรกทันที
-    voteCountdownIntervalId = setInterval(updateTimer, 1000); // อัปเดตทุก 1 วินาที
+    updateTimer(); 
+    voteCountdownIntervalId = setInterval(updateTimer, 1000); 
 }
 
 // (ใหม่) --- Admin Countdown Timer ---
 function startAdminCountdown(deadlineISO) {
-    // Clear timer เก่า (ถ้ามี)
     if (adminVoteCountdownIntervalId) {
         clearInterval(adminVoteCountdownIntervalId);
     }
-
     const deadline = new Date(deadlineISO).getTime();
-
     const updateAdminTimer = () => {
         const now = new Date().getTime();
         const distance = deadline - now;
-
         if (distance <= 0) {
-           // --- เมื่อหมดเวลา ---
             clearInterval(adminVoteCountdownIntervalId);
             adminVoteCountdownIntervalId = null;
-                
             if (adminVoteCountdown) {
                 adminVoteCountdown.innerText = "00:00";
             }
-
-            // (ใหม่) 1. ดึงข้อความ "หมดเวลา" จาก
             const lang = localStorage.getItem('language') || 'th';
             const alertMessage = translations[lang]['vote_time_up'] || "Voting time has expired!";
-
-            // (ใหม่) 2. แสดง Alert (ซึ่งจะ "หยุดรอ" จนกว่า Admin จะกด OK/Enter)
             alert(alertMessage); 
-
-            // (ใหม่) 3. โหลดสถานะ Modal ใหม่ (จะทำงานหลังจาก Admin กด OK แล้ว)
             const modalInstance = bootstrap.Modal.getInstance(manageVotePeriodModalEl);
-            if (modalInstance && modalInstance._isShown) { // เช็คว่า Modal ยังเปิดอยู่ไหม
-                loadVoteStatus(); //
+            if (modalInstance && modalInstance._isShown) { 
+                loadVoteStatus(); 
             }
-
         } else {
-            // --- ถ้ายังไม่หมดเวลา ---
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
             if (adminVoteCountdown) {
                 adminVoteCountdown.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             }
         }
     };
-
-    updateAdminTimer(); // เรียกครั้งแรกทันที
-    adminVoteCountdownIntervalId = setInterval(updateAdminTimer, 1000); // อัปเดตทุก 1 วินาที
+    updateAdminTimer(); 
+    adminVoteCountdownIntervalId = setInterval(updateAdminTimer, 1000); 
 }
 
 // --- Logic จัดการผู้เข้าประกวด (Candidate Management) ---
@@ -1302,12 +1236,10 @@ async function loadCandidatesToManager() {
     }
 }
 candidateListContainer.addEventListener('click', async (e) => {
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
     if (e.target.classList.contains('btn-delete-candidate')) {
         const candidateId = e.target.dataset.id;
         if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบผู้เข้าประกวดคนนี้? (คะแนนโหวตของพวกเขาจะหายไปด้วย)")) {
-            await deleteCandidate(candidateId, adminPassword);
+            await deleteCandidate(candidateId);
         }
     }
     if (e.target.classList.contains('btn-edit-candidate')) {
@@ -1319,7 +1251,9 @@ candidateListContainer.addEventListener('click', async (e) => {
         const newDept = prompt("แก้ไขฝ่าย:", currentDept);
         if (!newDept) return;
         if (newName.trim() !== currentName || newDept.trim() !== currentDept) {
-            await editCandidate(candidateId, newName.trim(), newDept.trim(), adminPassword);
+            if (confirm("ยืนยันการแก้ไขผู้เข้าประกวด?")) {
+                await editCandidate(candidateId, newName.trim(), newDept.trim());
+            }
         }
     }
 });
@@ -1328,21 +1262,20 @@ addCandidateForm.addEventListener('submit', async (e) => {
     const newName = newCandidateNameInput.value.trim();
     const newDept = newCandidateDeptInput.value.trim();
     if (!newName || !newDept) { displayError("กรุณากรอกชื่อและฝ่าย"); return; }
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
-    await addCandidate(newName, newDept, adminPassword);
+    
+    if (!confirm("ยืนยันการเพิ่มผู้เข้าประกวด?")) return;
+
+    await addCandidate(newName, newDept);
     newCandidateNameInput.value = '';
     newCandidateDeptInput.value = '';
 });
 resetCandidatesBtn.addEventListener('click', async () => {
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin:");
-    if (!adminPassword) return;
     if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบผู้เข้าประกวดทั้งหมด และรีเซ็ตเป็นค่าเริ่มต้น? (การโหวตทั้งหมดจะถูกลบด้วย)")) {
         try {
             const res = await fetch(`${API_BASE_URL}/candidates/reset`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminPassword })
+                body: JSON.stringify({})
             });
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || 'Failed to reset candidates');
@@ -1353,12 +1286,12 @@ resetCandidatesBtn.addEventListener('click', async () => {
         }
     }
 });
-async function addCandidate(name, department, adminPassword) {
+async function addCandidate(name, department) {
     try {
         const res = await fetch(`${API_BASE_URL}/candidates`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, department, adminPassword })
+            body: JSON.stringify({ name, department})
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Failed to add candidate');
@@ -1368,12 +1301,12 @@ async function addCandidate(name, department, adminPassword) {
         displayError(err.message);
     }
 }
-async function editCandidate(id, name, department, adminPassword) {
+async function editCandidate(id, name, department) {
     try {
         const res = await fetch(`${API_BASE_URL}/candidates/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, department, adminPassword })
+            body: JSON.stringify({ name, department})
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Failed to edit candidate');
@@ -1383,12 +1316,12 @@ async function editCandidate(id, name, department, adminPassword) {
         displayError(err.message);
     }
 }
-async function deleteCandidate(id, adminPassword) {
+async function deleteCandidate(id) {
      try {
         const res = await fetch(`${API_BASE_URL}/candidates/${id}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminPassword })
+            body: JSON.stringify({})
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Failed to delete candidate');
@@ -1520,11 +1453,12 @@ document.getElementById('uploadEmployeeForm').addEventListener('submit', async (
     const fileInput = document.getElementById('employeeFile');
     const file = fileInput.files[0];
     if (!file) { displayError('กรุณาเลือกไฟล์ Excel'); return; }
-    const adminPassword = prompt("กรุณากรอกรหัสผ่าน Admin เพื่อยืนยันการอัปโหลด:");
-    if (!adminPassword) return;
+    
+    if (!confirm("ยืนยันการอัปโหลดไฟล์?")) return;
+
     const formData = new FormData();
     formData.append('employeeFile', file);
-    formData.append('adminPassword', adminPassword);
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังอัปโหลด...';
@@ -1580,7 +1514,6 @@ sportdayForm.addEventListener('submit', async (e) => {
         container.innerHTML = `<div class="alert alert-danger">❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้</div>`;
     } finally {
         submitButton.disabled = false;
-        // รีเซ็ตข้อความปุ่ม (เผื่อเปลี่ยนภาษา)
         const lang = localStorage.getItem('language') || 'th';
         submitButton.innerText = translations[lang]['sportday_register_button'] || 'Confirm Participation';
     }

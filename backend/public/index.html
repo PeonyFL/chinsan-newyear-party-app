@@ -48,23 +48,68 @@
                     </form>
                     <div class="text-center mt-3"><a href="#" id="showFindFormLink" data-key="forgot_qr_link">ลืม QR Code? / ค้นหา QR Code</a></div>
                     <div id="admin-actions-container" class="mt-4 pt-4 border-top">
-                        <div class="d-flex flex-wrap justify-content-center gap-2">
-                            <button type="button" id="viewEmployeesBtn" class="btn btn-info" data-key="view_employees_button">ดูรายชื่อ</button>
-                            <button type="button" id="showFindQrPageBtn" class="btn btn-outline-info" data-key="find_qr_button">ค้นหา QR พนักงาน</button>
-                            <button type="button" id="showDrawPageBtn" class="btn btn-success" data-key="draw_prize_button">สุ่มรางวัล</button>
-                            <button type="button" id="managePrizesBtnAdmin" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#managePrizesModal">จัดการรางวัล</button>
-                            <button type="button" id="showCheckinPageBtn" class="btn btn-warning" data-key="checkin_button">เช็คอิน</button>
-                            <button type="button" id="showVotePageBtn" class="btn btn-danger" data-key="vote_button">โหวต</button>
-                            <button type="button" id="manageVotePeriodBtn" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#manageVotePeriodModal">ตั้งเวลาโหวต</button>
-                            <button type="button" id="manageCandidatesBtn" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#manageCandidatesModal">
-                                จัดการผู้เข้าประกวด
-                            </button>
-                            <button type="button" id="showRealtimeResultsBtn" class="btn btn-outline-primary">
-                                ดูผลโหวต Real-time
-                            </button>
-                        </div>
-                        <div class="d-grid gap-2 mt-3">
-                            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#exportExcelModal" data-key="export_excel_button">Export ข้อมูลเป็น Excel</button>
+                        <div class="row g-3">
+                            <div class="col-12 d-grid">
+                                <button type="button" id="showAddEmployeeFormBtn" class="btn btn-primary" data-key="add_employee_button">
+                                    เพิ่มพนักงาน (กรอกเอง)
+                                </button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="showCheckinPageBtn" class="btn btn-warning" data-key="checkin_button">เช็คอิน</button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="showSportdayPageBtnAdmin" class="btn btn-success" data-key="sportday_admin_button">ลงทะเบียนกีฬาสี</button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="viewEmployeesBtn" class="btn btn-info" data-key="view_employees_button">ดูรายชื่อ</button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="showFindQrPageBtn" class="btn btn-outline-info" data-key="find_qr_button">ค้นหา QR พนักงาน</button>
+                            </div>
+
+                            <div class="col-12"><hr class="my-2"></div>
+
+                            <div class="col-6 d-grid">
+                                <button type="button" id="showDrawPageBtn" class="btn btn-success" data-key="draw_prize_button">สุ่มรางวัล</button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="managePrizesBtnAdmin" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#managePrizesModal">
+                                    จัดการรางวัล
+                                </button>
+                            </div>
+
+                            <div class="col-12"><hr class="my-2"></div>
+
+                            <div class="col-6 d-grid">
+                                <button type="button" id="showVotePageBtn" class="btn btn-danger" data-key="vote_button">โหวต</button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="manageVotePeriodBtn" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#manageVotePeriodModal">
+                                    ตั้งเวลาโหวต
+                                </button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="manageCandidatesBtn" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#manageCandidatesModal">
+                                    จัดการผู้เข้าประกวด
+                                </button>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <button type="button" id="showRealtimeResultsBtn" class="btn btn-outline-primary">
+                                    ดูผลโหวต Real-time
+                                </button>
+                            </div>
+
+                            <div class="col-12"><hr class="my-2"></div>
+
+                            <div class="col-12 d-grid">
+                                <button type="button" id="showStatusCheckBtn" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#statusCheckModal" data-key="status_check_button">
+                                    สรุปสถานะการเข้าร่วม
+                                </button>
+                            </div>
+                            <div class="col-12 d-grid">
+                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#exportExcelModal" data-key="export_excel_button">Export ข้อมูลเป็น Excel</button>
+                            </div>
+
                         </div>
                         <div class="card bg-light mt-3">
                             <div class="card-body">
@@ -243,7 +288,76 @@
     <div class="modal fade" id="winnerModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content text-center"><div class="modal-header bg-success text-white"><h5 class="modal-title w-100" data-key="winner_modal_title">🎉 ขอแสดงความยินดี! 🎉</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><p class="lead" data-key="winner_modal_subtitle">ผู้โชคดีที่ได้รับรางวัล</p><p id="modal-prize-name" class="h5 text-danger fw-bold"></p><div class="winner-announcement bg-light p-3 rounded mt-3"><p id="modal-winner-name" class="display-6 text-primary fw-bold mb-0"></p><p id="modal-winner-id" class="text-muted"></p></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal" data-key="close_button">ปิด</button></div></div></div></div>
     <div class="modal fade" id="exportExcelModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" data-key="export_modal_title">เลือกหัวข้อที่ต้องการ Export</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p data-key="export_modal_subtitle">กรุณาเลือกข้อมูลที่ต้องการนำออกมาเป็นไฟล์ Excel</p><div class="form-check"><input class="form-check-input" type="checkbox" value="employees" id="export-employees-check" checked><label class="form-check-label" for="export-employees-check" data-key="export_option_employees">รายชื่อผู้ลงทะเบียนทั้งหมด</label></div><div class="form-check"><input class="form-check-input" type="checkbox" value="winners" id="export-winners-check" checked><label class="form-check-label" for="export-winners-check" data-key="export_option_winners">รายชื่อผู้โชคดีที่ได้รับรางวัล</label></div><div class="form-check"><input class="form-check-input" type="checkbox" value="votes" id="export-votes-check" checked><label class="form-check-label" for="export-votes-check" data-key="export_option_votes">ผลคะแนนโหวตการประกวด</label></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-key="cancel_button">ยกเลิก</button><button type="button" id="confirm-export-btn" class="btn btn-success" data-key="confirm_export_button">ยืนยันการ Export</button></div></div></div></div>
     <div class="modal fade" id="managePrizesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">จัดการรายการรางวัล</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p class="text-muted">คุณสามารถ เพิ่ม, ลบ, หรือแก้ไขชื่อรางวัลได้ที่นี่ ลำดับรางวัลจะเรียงตามลำดับการเพิ่ม (รางวัลที่ 1 จะอยู่ล่างสุด)</p><ul class="list-group mb-3" id="prize-management-list"></ul><form id="addPrizeForm"><div class="input-group"><input type="text" id="newPrizeNameInput" class="form-control" placeholder="กรอกชื่อรางวัลใหม่" required><button class="btn btn-success" type="submit">เพิ่มรางวัล</button></div></form></div><div class="modal-footer justify-content-between"><button type="button" id="resetPrizesBtn" class="btn btn-danger">รีเซ็ตเป็นค่าเริ่มต้น</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button></div></div></div></div>
-    <div class="modal fade" id="manageCandidatesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">จัดการผู้เข้าประกวด</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p class="text-muted">คุณสามารถ เพิ่ม, ลบ, หรือแก้ไขรายชื่อผู้เข้าประกวดได้ที่นี่</p><ul class="list-group mb-3" id="candidate-management-list"></ul><form id="addCandidateForm"><div class="input-group"><input type="text" id="newCandidateNameInput" class="form-control" placeholder="ชื่อ-นามสกุล ผู้เข้าประกวด" required><input type="text" id="newCandidateDeptInput" class="form-control" placeholder="ฝ่าย" required><button class="btn btn-success" type="submit">เพิ่มผู้เข้าประกวด</button></div></form></div><div class="modal-footer justify-content-between"><button type="button" id="resetCandidatesBtn" class="btn btn-danger">รีเซ็ตเป็นค่าเริ่มต้น</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button></div></div></div></div>
+
+    <div class="modal fade" id="manageCandidatesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">จัดการผู้เข้าประกวด</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">คุณสามารถ เพิ่ม, ลบ, หรือแก้ไขรายชื่อผู้เข้าประกวดได้ที่นี่</p>
+                    <ul class="list-group mb-3" id="candidate-management-list"></ul>
+                    <form id="addCandidateForm">
+                        <div class="input-group">
+                            <input type="text" id="newCandidateNameInput" class="form-control" placeholder="ชื่อ-นามสกุล ผู้เข้าประกวด" required>
+                            <input type="text" id="newCandidateDeptInput" class="form-control" placeholder="ฝ่าย" required>
+                            <button class="btn btn-success" type="submit">เพิ่มผู้เข้าประกวด</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" id="resetCandidatesBtn" class="btn btn-danger">รีเซ็ตเป็นค่าเริ่มต้น</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="statusCheckModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-key="status_modal_title">สรุปสถานะการเข้าร่วม</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p data-key="status_modal_subtitle">สรุปจำนวนพนักงานที่ดำเนินการในแต่ละขั้นตอน</p>
+                    <div id="status-check-loading" class="text-center">
+                        <span class="spinner-border spinner-border-sm"></span>
+                    </div>
+                    <ul id="status-check-list" class="list-group list-group-flush d-none">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span data-key="status_total">พนักงานทั้งหมดในระบบ</span>
+                            <span id="status-total" class="badge bg-secondary rounded-pill">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span data-key="status_new_year">✔️ ลงทะเบียนปีใหม่ (รับ QR)</span>
+                            <span id="status-new-year" class="badge bg-primary rounded-pill">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span data-key="status_sport_day">✔️ ลงทะเบียนกีฬาสี</span>
+                            <span id="status-sport-day" class="badge bg-success rounded-pill">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span data-key="status_checked_in">✔️ เช็คอินเข้างาน</span>
+                            <span id="status-checked-in" class="badge bg-warning text-dark rounded-pill">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center fw-bold text-danger">
+                            <span data-key="status_all_three">⭐ ครบทุกเงื่อนไข (มีสิทธิ์สุ่มรางวัล)</span>
+                            <span id="status-all-three" class="badge bg-danger rounded-pill">0</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-key="close_button">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
     <div class="modal fade" id="manageVotePeriodModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
