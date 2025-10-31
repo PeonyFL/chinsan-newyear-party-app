@@ -7,7 +7,7 @@ const xlsx = require('xlsx');
 const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const CORRECT_PASSWORD = 'admin'; // Admin password
 
 // Setup (Uploads folder, Multer, Middleware)
@@ -636,6 +636,7 @@ app.get('/check-vote-eligibility/:employeeId', (req, res) => {
 });
 
 // --- Start Server ---
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => { // <--- เพิ่ม '0.0.0.0' ตรงนี้
     console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`(Now accepting connections from any IP on port ${PORT})`);
 });
