@@ -101,7 +101,7 @@ app.post('/add-employee', (req, res) => {
     if (!firstName || !lastName || !department || !employeeId) {
         return res.status(400).json({ "error": "กรุณากรอกข้อมูลให้ครบถ้วน" });
     }
-    const sql = 'INSERT OR IGNORE INTO employees (first_name, last_name, department, employee_id) VALUES (?,?,?,?)';
+    const sql = "INSERT OR IGNORE INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES (?,?,?,?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))";
     const employeeIdUpper = String(employeeId).toUpperCase();
     db.run(sql, [firstName, lastName, department, employeeIdUpper], function(err) {
         if (err) {
@@ -110,7 +110,7 @@ app.post('/add-employee', (req, res) => {
         if (this.changes === 0) { // If IGNORE prevented insertion (duplicate employee_id)
             return res.status(409).json({ "error": "มีรหัสพนักงานนี้ในระบบแล้ว" });
         }
-        res.status(201).json({ "message": "เพิ่มข้อมูลพนักงานสำเร็จ (รอพนักงานยืนยัน)" });
+        res.status(201).json({ "message": "เพิ่มและยืนยันข้อมูลพนักงานสำเร็จ" });
     });
 });
 

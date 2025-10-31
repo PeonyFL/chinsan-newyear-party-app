@@ -50,10 +50,9 @@
                     <div id="admin-actions-container" class="mt-4 pt-4 border-top">
                         <div class="d-flex flex-wrap justify-content-center gap-2">
                             <button type="button" id="viewEmployeesBtn" class="btn btn-info" data-key="view_employees_button">ดูรายชื่อ</button>
+                            <button type="button" id="showFindQrPageBtn" class="btn btn-outline-info" data-key="find_qr_button">ค้นหา QR พนักงาน</button>
                             <button type="button" id="showDrawPageBtn" class="btn btn-success" data-key="draw_prize_button">สุ่มรางวัล</button>
-                            <button type="button" id="managePrizesBtnAdmin" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#managePrizesModal">
-                                จัดการรางวัล
-                            </button>
+                            <button type="button" id="managePrizesBtnAdmin" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#managePrizesModal">จัดการรางวัล</button>
                             <button type="button" id="showCheckinPageBtn" class="btn btn-warning" data-key="checkin_button">เช็คอิน</button>
                             <button type="button" id="showVotePageBtn" class="btn btn-danger" data-key="vote_button">โหวต</button>
                             <button type="button" id="manageVotePeriodBtn" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#manageVotePeriodModal">ตั้งเวลาโหวต</button>
@@ -85,6 +84,9 @@
                 </div>
 
                 <div id="find-section" class="d-none">
+                    <div class="d-grid mb-3">
+                        <button type="button" id="backFromFindBtn" class="btn btn-secondary" data-key="back_to_admin_menu">กลับไปหน้า Admin</button>
+                    </div>
                     <form id="findForm">
                         <div class="mb-3"><label for="findEmployeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label><input type="text" class="form-control" id="findEmployeeId" required></div>
                         <div class="d-grid"><button type="submit" class="btn btn-primary btn-lg" data-key="search_button">ค้นหา</button></div>

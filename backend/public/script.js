@@ -46,7 +46,10 @@ const translations = {
         vote_close_button: "Close Voting Now",
         // Vote Time
         vote_countdown_label: "Time remaining:",
-        vote_time_up: "Voting time has expired!"
+        vote_time_up: "Voting time has expired!",
+        // Qr Code Admin
+        find_qr_button: "Find Employee QR",
+        back_to_admin_menu: "Back to Admin Menu"
     },
     th: {
         page_title: "Chinsan New Year Party 2025", role_selection_title: "กรุณาเลือกบทบาทของคุณ", employee_button: "พนักงาน (งานปีใหม่)", // (แก้ไข)
@@ -89,7 +92,10 @@ const translations = {
         vote_close_button: "ปิดโหวตทันที",
         // Vote Time
         vote_countdown_label: "เวลาที่เหลือ:",
-        vote_time_up: "หมดเวลาโหวตแล้ว!"
+        vote_time_up: "หมดเวลาโหวตแล้ว!",
+        // Qr Code Admin
+        find_qr_button: "ค้นหา QR พนักงาน",
+        back_to_admin_menu: "กลับไปหน้า Admin"
     }
 };
 
@@ -161,6 +167,7 @@ let currentVotingEmployeeId = null; // Store Employee ID for voting
 let employeeListIntervalId = null;
 let voteCountdownIntervalId = null;
 let adminVoteCountdownIntervalId = null; // <-- (ใหม่) ตัวนับเวลาสำหรับหน้า Admin
+let voteStatusPollIntervalId = null;
 
 // --- Language Switcher Logic ---
 function setLanguage(lang) {
@@ -208,6 +215,20 @@ window.addEventListener('hashchange', async () => { // (ใหม่) เพิ�
 // --- Navigation ---
 document.getElementById('select-employee-btn').addEventListener('click', showEmployeeView);
 document.getElementById('select-admin-btn').addEventListener('click', () => adminPasswordModal.show());
+
+// (ใหม่) เพิ่ม Event Listener สำหรับปุ่ม "ค้นหา QR พนักงาน"
+document.getElementById('showFindQrPageBtn').addEventListener('click', () => {
+    // นำทาง Admin ไปยังหน้าค้นหา (findSection)
+    navigateTo(findSection); 
+});
+
+// (ใหม่) เพิ่ม Event Listener สำหรับปุ่ม "กลับไปหน้า Admin"
+document.getElementById('backFromFindBtn').addEventListener('click', () => {
+    // ปุ่มนี้มีไว้สำหรับ Admin เท่านั้น
+    // ดังนั้น ให้กลับไปที่หน้าเมนู Admin (registrationSection)
+    navigateTo(registrationSection); //
+});
+
 
 // (ใหม่) Manage Vote Period Logic
 manageVotePeriodModalEl.addEventListener('show.bs.modal', loadVoteStatus);
@@ -365,6 +386,17 @@ function navigateTo(sectionToShow) {
     if (realtimeIntervalId && sectionToShow !== realtimeResultsSection) { //
         clearInterval(realtimeIntervalId); //
         realtimeIntervalId = null; //
+    }
+    // (ใหม่) หยุดการ Polling สถานะโหวต เมื่อไม่ได้อยู่หน้าโหวต
+    if (voteStatusPollIntervalId && sectionToShow !== voteSection) {
+        clearInterval(voteStatusPollIntervalId);
+        voteStatusPollIntervalId = null;
+    }
+
+    // (ใหม่) หยุดการนับถอยหลัง (ของพนักงาน) เมื่อไม่ได้อยู่หน้าโหวต
+    if (voteCountdownIntervalId && sectionToShow !== voteSection) {
+        clearInterval(voteCountdownIntervalId);
+        voteCountdownIntervalId = null;
     }
 
     // (ใหม่) หยุดการ Polling รายชื่อพนักงาน เมื่อไม่ได้อยู่หน้ารายชื่อ
@@ -899,6 +931,12 @@ function resetVotePageUI() {
         clearInterval(voteCountdownIntervalId);
         voteCountdownIntervalId = null;
     }
+
+    // (ใหม่) หยุดการ Polling สถานะ (ถ้ามี)
+    if (voteStatusPollIntervalId) {
+        clearInterval(voteStatusPollIntervalId);
+        voteStatusPollIntervalId = null;
+    }
     // (ใหม่) ซ่อนและรีเซ็ตกล่องนับเวลา
     if (voteCountdownContainer) { 
         voteCountdownContainer.classList.add('d-none');
@@ -935,33 +973,70 @@ async function showVotePage() { // (ใหม่) เพิ่ม async
 
     const backBtn = document.getElementById('backFromVoteBtn');
     if (window.location.hash === '#vote') {
-        // ถ้าเข้ามาจาก link ตรง (#vote) ให้ซ่อนปุ่ม
         backBtn.classList.add('d-none');
 
-        // (ใหม่) ตรวจสอบสถานะโหวตทันทีสำหรับพนักงาน
+        // (ใหม่) หยุดการ Polling เก่า (ถ้ามี)
+        if (voteStatusPollIntervalId) clearInterval(voteStatusPollIntervalId);
+
+        // (แก้ไข) ตรวจสอบสถานะโหวตทันที
         try {
             const res = await fetch(`${API_BASE_URL}/vote-status`);
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Failed to fetch status");
 
             if (!result.is_open) {
-                // ถ้าโหวตปิด, ซ่อนฟอร์มและแสดงข้อความ
-                voteElements.eligibilityMessage.innerText = "ระบบโหวตยังไม่เปิดหรือปิดไปแล้ว";
+                // --- 1. ถ้าโหวตปิด ---
+                const lang = localStorage.getItem('language') || 'th';
+                voteElements.eligibilityMessage.innerText = translations[lang]['vote_status_closed']; // "สถานะ: ปิดโหวต"
+                voteElements.eligibilityMessage.classList.remove('d-none'); // แสดงข้อความ
                 voteElements.eligibilityCheckDiv.classList.add('d-none'); // ซ่อนฟอร์ม
+
+                // (ใหม่) เริ่ม POLLING เพื่อรอระบบเปิด
+                voteStatusPollIntervalId = setInterval(async () => {
+                    console.log("Polling for vote status..."); // (สำหรับ Debug)
+                    try {
+                        const pollRes = await fetch(`${API_BASE_URL}/vote-status`);
+                        const pollResult = await pollRes.json();
+
+                        if (pollResult.is_open) {
+                            // --- เย้! ระบบเปิดแล้ว ---
+                            console.log("Voting is NOW OPEN!");
+
+                            // 1. หยุด Polling
+                            clearInterval(voteStatusPollIntervalId);
+                            voteStatusPollIntervalId = null;
+
+                            // 2. ซ่อนข้อความ "ปิดโหวต"
+                            voteElements.eligibilityMessage.classList.add('d-none');
+                            voteElements.eligibilityMessage.innerText = '';
+
+                            // 3. แสดงฟอร์มตรวจสอบสิทธิ์
+                            voteElements.eligibilityCheckDiv.classList.remove('d-none');
+                        }
+                        // (ถ้าระบบยังไม่เปิด ก็ไม่ต้องทำอะไร รอ Polling รอบถัดไป)
+
+                    } catch (pollErr) {
+                        // (ถ้า Polling ล้มเหลว ให้หยุด)
+                        clearInterval(voteStatusPollIntervalId);
+                        voteStatusPollIntervalId = null;
+                    }
+                }, 3000); // ตรวจสอบทุก 3 วินาที
+
             } else {
-                // ถ้าโหวตเปิด, แสดงฟอร์ม
-                voteElements.eligibilityCheckDiv.classList.remove('d-none');
+                // --- 2. ถ้าโหวตเปิดอยู่แล้ว ---
+                voteElements.eligibilityMessage.classList.add('d-none'); // ซ่อนข้อความ
+                voteElements.eligibilityCheckDiv.classList.remove('d-none'); // แสดงฟอร์ม
             }
         } catch (err) {
             voteElements.eligibilityMessage.innerText = `ไม่สามารถโหลดสถานะโหวตได้: ${err.message}`;
+            voteElements.eligibilityMessage.classList.remove('d-none');
             voteElements.eligibilityCheckDiv.classList.add('d-none'); // ซ่อนฟอร์ม
         }
 
     } else {
-        // ถ้า Admin กดเข้ามา ให้แสดงปุ่ม
+        // (โค้ดส่วน Admin เหมือนเดิม)
         backBtn.classList.remove('d-none');
-        // (ใหม่) ตรวจสอบให้แน่ใจว่า Admin เห็นฟอร์ม
-        voteElements.eligibilityCheckDiv.classList.remove('d-none'); 
+        voteElements.eligibilityCheckDiv.classList.remove('d-none');
     }
 }
 
@@ -1156,19 +1231,25 @@ function startAdminCountdown(deadlineISO) {
         const distance = deadline - now;
 
         if (distance <= 0) {
-            // --- เมื่อหมดเวลา ---
+           // --- เมื่อหมดเวลา ---
             clearInterval(adminVoteCountdownIntervalId);
             adminVoteCountdownIntervalId = null;
-
+                
             if (adminVoteCountdown) {
                 adminVoteCountdown.innerText = "00:00";
             }
 
-            // (สำคัญ) เมื่อหมดเวลา ให้โหลดสถานะ Modal ใหม่
-            // ซึ่งจะเปลี่ยนหน้าจอกลับไปเป็น "ปิดโหวต" โดยอัตโนมัติ
+            // (ใหม่) 1. ดึงข้อความ "หมดเวลา" จาก
+            const lang = localStorage.getItem('language') || 'th';
+            const alertMessage = translations[lang]['vote_time_up'] || "Voting time has expired!";
+
+            // (ใหม่) 2. แสดง Alert (ซึ่งจะ "หยุดรอ" จนกว่า Admin จะกด OK/Enter)
+            alert(alertMessage); 
+
+            // (ใหม่) 3. โหลดสถานะ Modal ใหม่ (จะทำงานหลังจาก Admin กด OK แล้ว)
             const modalInstance = bootstrap.Modal.getInstance(manageVotePeriodModalEl);
             if (modalInstance && modalInstance._isShown) { // เช็คว่า Modal ยังเปิดอยู่ไหม
-                loadVoteStatus(); 
+                loadVoteStatus(); //
             }
 
         } else {
