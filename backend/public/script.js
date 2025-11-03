@@ -1,7 +1,7 @@
 //
 // --- API Base URL ---
 //
-const API_BASE_URL = "https://chinsanparty-backend.onrender.com";
+const API_BASE_URL = "http://localhost:3000";
 //
 // --- Language Dictionary ---
 const translations = {
