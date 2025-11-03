@@ -11,15 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      # --- จุดที่แก้ไข ---
-      # เราเพิ่ม 'working-directory: ./backend' เข้าไปใน step นี้
-      # เพื่อสั่งให้รันคำสั่ง npm ในโฟลเดอร์ backend
-      - name: Run npm ci && npm run build
-        run: npm ci && npm run build
-        working-directory: ./backend  # <-- แก้ไขโดยเพิ่มบรรทัดนี้ (และย่อหน้าให้ถูกต้อง)
-      # --- จบจุดที่แก้ไข ---
-
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
