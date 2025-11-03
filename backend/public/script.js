@@ -1,7 +1,7 @@
 //
 // --- API Base URL ---
 //
-const API_BASE_URL = " https://condemnable-socorro-broilingly.ngrok-free.dev";
+const API_BASE_URL = " https://chinsanparty-backend.onrender.com";
 //
 // --- Language Dictionary ---
 const translations = {
