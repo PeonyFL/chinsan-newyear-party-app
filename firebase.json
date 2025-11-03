@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "C:/party-registration/backend/public",
+    "public": "backend/public",
     "ignore": [
       "firebase.json",
       "**/.*",
