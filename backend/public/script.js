@@ -450,9 +450,14 @@ function navigateTo(sectionToShow) {
     mainHeaderContainer.classList.toggle('d-none', sectionToShow !== registrationSection && sectionToShow !== findSection); 
     mainCard.classList.toggle('fullscreen', fullScreenSections.includes(sectionToShow));
 
+    // [ใหม่] ตรวจสอบและซ่อนปุ่ม "กลับหน้า Admin" เสมอถ้าไม่ใช่ Admin
+    if (sectionToShow === findSection) {
+        document.getElementById('backFromFindBtn').classList.toggle('d-none', !isAdminLoggedIn);
+    }
+
     // (แก้ไข) ใช้ isAdminLoggedIn ที่เราตั้งไว้
     if (sectionToShow === registrationSection) {
-        registrationForm.classList.add('d-none');
+        registrationForm.classList.toggle('d-none', isAdminLoggedIn);
          document.getElementById('managePrizesBtnAdmin').classList.toggle('d-none', !isAdminLoggedIn);
          document.getElementById('manageCandidatesBtn').classList.toggle('d-none', !isAdminLoggedIn);
          document.getElementById('showRealtimeResultsBtn').classList.toggle('d-none', !isAdminLoggedIn);
@@ -475,8 +480,10 @@ async function showEmployeeView() {
 
     if (window.location.hash === '#vote') {
         await showVotePage(); 
+    } else if (window.location.hash === '#newyear') { // <-- [แก้ไข] เพิ่ม else if สำหรับ #newyear
+        navigateTo(findSection);           // <-- [แก้ไข] นำทางไปหน้าลงทะเบียน
     } else {
-        navigateTo(findSection); 
+        navigateTo(findSection); // ถ้าเข้าด้วยปุ่ม "พนักงาน" ปกติ จะไปหน้าค้นหา
     }
 }
 
