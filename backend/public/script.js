@@ -6,8 +6,8 @@ const API_BASE_URL = " https://chinsanparty-backend.onrender.com";
 // --- Language Dictionary ---
 const translations = {
     en: {
-        page_title: "Chinsan New Year Party 2025", role_selection_title: "Please Select Your Role", employee_button: "Employee (New Year)",
-        main_title: "Chinsan New Year Party 2025", main_subtitle: "Fill in your information to receive a QR Code for entry",
+        page_title: "Chinsan New Year Party 2026", role_selection_title: "Please Select Your Role", employee_button: "Employee (New Year)",
+        main_title: "Chinsan New Year Party 2026", main_subtitle: "Fill in your information to receive a QR Code for entry",
         form_firstname: "First Name", form_lastname: "Last Name", form_department: "Department", form_employee_id: "Employee ID",
         register_button: "Register", forgot_qr_link: "Forgot QR Code? / Find QR Code", search_button: "Search",
         back_to_register_link: "Back to Registration", save_qr_instruction: "Please save this QR Code for event entry.",
@@ -57,8 +57,8 @@ const translations = {
         add_employee_button: "Add New Employee (Manual)"
     },
     th: {
-        page_title: "Chinsan New Year Party 2025", role_selection_title: "กรุณาเลือกบทบาทของคุณ", employee_button: "พนักงาน (งานปีใหม่)",
-        main_title: "Chinsan New Year Party 2025", main_subtitle: "กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน",
+        page_title: "Chinsan New Year Party 2026", role_selection_title: "กรุณาเลือกบทบาทของคุณ", employee_button: "พนักงาน (งานปีใหม่)",
+        main_title: "Chinsan New Year Party 2026", main_subtitle: "กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน",
         form_firstname: "ชื่อจริง", form_lastname: "นามสกุล", form_department: "ฝ่าย", form_employee_id: "รหัสพนักงาน",
         register_button: "ลงทะเบียน", forgot_qr_link: "ลืม QR Code? / ค้นหา QR Code", search_button: "ค้นหา",
         back_to_register_link: "กลับไปหน้าลงทะเบียน", save_qr_instruction: "กรุณาบันทึก QR Code นี้ไว้สำหรับสแกนเข้างาน",

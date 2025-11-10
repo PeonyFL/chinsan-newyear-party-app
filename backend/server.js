@@ -651,6 +651,10 @@ app.get('/check-vote-eligibility/:employeeId', (req, res) => {
     });
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // --- Start Server ---
 app.listen(PORT, '0.0.0.0', () => { // <--- เพิ่ม '0.0.0.0' ตรงนี้
     console.log(`Server is running on http://localhost:${PORT}`);
