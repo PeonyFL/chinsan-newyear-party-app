@@ -3,6 +3,4 @@
 /backend/node_modules/
 
 #Database file
-/backend/new_year_party.db
-/backend/new_year_party.db-shm
-/backend/new_year_party.db-wal
+/backend/.env

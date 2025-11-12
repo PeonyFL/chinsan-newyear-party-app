@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const db = require('./database.js');
+const db = require('./database.js'); // ต้องมั่นใจว่า database.js export 'pool' จาก pg
 const qrcode = require('qrcode');
 const multer = require('multer');
 const xlsx = require('xlsx');
@@ -8,7 +8,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const CORRECT_PASSWORD = 'admin'; // Admin password (ยังคงใช้สำหรับ Login และ "ลบทั้งหมด")
+// const CORRECT_PASSWORD = 'admin'; // (ยกเลิกการตรวจสอบรหัสผ่านตามโค้ดล่าสุด)
 
 // Setup (Uploads folder, Multer, Middleware)
 const uploadDir = 'uploads';
@@ -18,9 +18,9 @@ if (!fs.existsSync(uploadDir)){
 const upload = multer({ dest: uploadDir + '/' });
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Serve static files from 'public'
+app.use(express.static('public'));
 
-// Helper Functions (safeUnlink, handleUploadErrors)
+// Helper Functions
 function safeUnlink(filePath) {
     try {
         if (fs.existsSync(filePath)) {
@@ -30,6 +30,7 @@ function safeUnlink(filePath) {
         console.error("Error deleting temp file:", filePath, unlinkErr.message);
     }
 }
+
 function handleUploadErrors(err, req, res, next) {
     if (err instanceof multer.MulterError) {
         return res.status(400).json({ "error": "Upload Error: " + err.message });
@@ -41,202 +42,226 @@ function handleUploadErrors(err, req, res, next) {
 
 // --- Employee Endpoints ---
 
-// POST /upload-employees - Upload Excel file for bulk employee addition
-app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors, (req, res) => {
-    // (ลบการตรวจสอบรหัสผ่าน)
+// POST /upload-employees - Upload Excel file
+app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors, async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ "error": "ไม่พบไฟล์ที่อัปโหลด" });
     }
     const filePath = req.file.path;
+    const client = await db.connect(); // ขอ Client สำหรับ Transaction
+
     try {
         const workbook = xlsx.readFile(filePath);
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
-        const sql = 'INSERT OR IGNORE INTO employees (first_name, last_name, department, employee_id) VALUES (?,?,?,?)';
-        const stmt = db.prepare(sql);
+
+        await client.query('BEGIN'); // เริ่ม Transaction
+
+        // PostgreSQL: ใช้ $1, $2... และ ON CONFLICT DO NOTHING
+        const sql = `
+            INSERT INTO employees (first_name, last_name, department, employee_id) 
+            VALUES ($1, $2, $3, $4) 
+            ON CONFLICT (employee_id) DO NOTHING
+        `;
+        
         let count = 0;
-        db.serialize(() => {
-            db.run('BEGIN TRANSACTION');
-            // Start from 1 to skip header row
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                // Ensure all required columns exist
-                if (row && row[0] && row[1] && row[2] && row[3]) {
-                    const firstName = row[0];
-                    const lastName = row[1];
-                    const department = row[2];
-                    const employeeId = String(row[3]).toUpperCase(); // Standardize employee ID
-                    stmt.run(firstName, lastName, department, employeeId);
-                    count++;
-                }
+        // Start from 1 to skip header row
+        for (let i = 1; i < data.length; i++) {
+            const row = data[i];
+            if (row && row[0] && row[1] && row[2] && row[3]) {
+                const firstName = row[0];
+                const lastName = row[1];
+                const department = row[2];
+                const employeeId = String(row[3]).toUpperCase();
+                
+                await client.query(sql, [firstName, lastName, department, employeeId]);
+                count++;
             }
-            db.run('COMMIT', (err) => {
-                if (err) {
-                    db.run('ROLLBACK');
-                    safeUnlink(filePath);
-                    return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + err.message });
-                }
-                stmt.finalize();
-                safeUnlink(filePath); // Delete temp file after processing
-                res.status(200).json({ "message": `อัปโหลดและประมวลผลข้อมูลสำเร็จ ${count} รายการ (รอพนักงานยืนยัน)` });
-            });
-        });
+        }
+
+        await client.query('COMMIT'); // ยืนยัน
+        res.status(200).json({ "message": `อัปโหลดและประมวลผลข้อมูลสำเร็จ ${count} รายการ (รอพนักงานยืนยัน)` });
+
     } catch (err) {
-        safeUnlink(filePath); // Delete temp file on error
+        await client.query('ROLLBACK'); // ยกเลิกถ้ามีปัญหา
         return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการประมวลผลไฟล์ Excel: " + err.message });
+    } finally {
+        client.release(); // คืน Connection
+        safeUnlink(filePath);
     }
 });
 
 // POST /add-employee - Admin adds a single employee
-app.post('/add-employee', (req, res) => {
-    // (ลบ adminPassword ออกจาก const)
+app.post('/add-employee', async (req, res) => {
     const { firstName, lastName, department, employeeId } = req.body;
 
     if (!firstName || !lastName || !department || !employeeId) {
         return res.status(400).json({ "error": "กรุณากรอกข้อมูลให้ครบถ้วน" });
     }
-    // (ลบการตรวจสอบรหัสผ่าน)
-    
-    const sql = "INSERT OR IGNORE INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES (?,?,?,?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))";
+
     const employeeIdUpper = String(employeeId).toUpperCase();
-    db.run(sql, [firstName, lastName, department, employeeIdUpper], function(err) {
-        if (err) {
-            return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + err.message });
-        }
-        if (this.changes === 0) { // If IGNORE prevented insertion (duplicate employee_id)
+    
+    // PostgreSQL: ใช้ NOW()
+    const sql = `
+        INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) 
+        VALUES ($1, $2, $3, $4, NOW())
+        ON CONFLICT (employee_id) DO NOTHING
+    `;
+
+    try {
+        const result = await db.query(sql, [firstName, lastName, department, employeeIdUpper]);
+        
+        // ตรวจสอบว่ามีการ Insert จริงหรือไม่ (rowCount)
+        if (result.rowCount === 0) {
             return res.status(409).json({ "error": "มีรหัสพนักงานนี้ในระบบแล้ว" });
         }
         res.status(201).json({ "message": "เพิ่มและยืนยันข้อมูลพนักงานสำเร็จ" });
-    });
+    } catch (err) {
+        res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + err.message });
+    }
 });
 
-// GET /find/:employeeId - Employee finds their info and confirms registration
-app.get('/find/:employeeId', (req, res) => {
+// GET /find/:employeeId
+app.get('/find/:employeeId', async (req, res) => {
     const employeeId = req.params.employeeId.toUpperCase();
-    const sql = "SELECT * FROM employees WHERE employee_id = ?";
-    db.get(sql, [employeeId], (err, row) => {
-        if (err) { return res.status(500).json({ "error": err.message }); }
+    const sql = "SELECT * FROM employees WHERE employee_id = $1"; // ใช้ $1
+
+    try {
+        const result = await db.query(sql, [employeeId]);
+        const row = result.rows[0];
+
         if (row) {
             const isFirstTimeRegistration = (row.registration_time === null);
+            
             const processRequest = async () => {
                 try {
                     const qrCodeDataUrl = await qrcode.toDataURL(row.employee_id, { width: 350, margin: 1 });
                     res.status(200).json({
                         "message": isFirstTimeRegistration ? "ยืนยันการลงทะเบียนสำเร็จ!" : "พบข้อมูลของคุณแล้ว",
                         "data": {
-                            "firstName": row.first_name, "lastName": row.last_name, "department": row.department,
-                            "employeeId": row.employee_id, "qrCode": qrCodeDataUrl
+                            "firstName": row.first_name, 
+                            "lastName": row.last_name, 
+                            "department": row.department,
+                            "employeeId": row.employee_id, 
+                            "qrCode": qrCodeDataUrl
                         }
                     });
                 } catch (qrErr) {
                     return res.status(500).json({ "error": "ไม่สามารถสร้าง QR Code ได้" });
                 }
             };
+
             if (isFirstTimeRegistration) {
-                // Use ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ) for JavaScript compatibility
-                const sql_update = "UPDATE employees SET registration_time = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE employee_id = ?";
-                db.run(sql_update, [employeeId], (updateErr) => {
-                    if (updateErr) {
-                        return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกเวลายืนยัน" });
-                    }
-                    processRequest(); // Proceed after successful update
-                });
+                // PostgreSQL: ใช้ NOW()
+                const sql_update = "UPDATE employees SET registration_time = NOW() WHERE employee_id = $1";
+                await db.query(sql_update, [employeeId]);
+                processRequest();
             } else {
-                processRequest(); // Proceed directly if already registered
+                processRequest();
             }
         } else {
             return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้ในระบบ" });
         }
-    });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// GET /employees - Get list of all employees (Admin)
-app.get('/employees', (req, res) => {
-    const sql = "SELECT id, first_name, last_name, employee_id, department, registration_time, checked_in, checkin_time, sport_day_registered, sport_day_reg_time FROM employees ORDER BY registration_time DESC";
-    db.all(sql, [], (err, rows) => {
-        if (err) { res.status(500).json({ "error": err.message }); return; }
-        res.status(200).json({ "message": "success", "data": rows });
-    });
+// GET /employees
+app.get('/employees', async (req, res) => {
+    // PostgreSQL: boolean checked_in จะคืนค่าเป็น true/false
+    const sql = `
+        SELECT id, first_name, last_name, employee_id, department, 
+               registration_time, checked_in, checkin_time, 
+               sport_day_registered, sport_day_reg_time 
+        FROM employees 
+        ORDER BY registration_time DESC
+    `;
+    try {
+        const result = await db.query(sql);
+        res.status(200).json({ "message": "success", "data": result.rows });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// (ใหม่) GET /employees/status-summary - Get counts for admin dashboard
-app.get('/employees/status-summary', (req, res) => {
+// GET /employees/status-summary
+app.get('/employees/status-summary', async (req, res) => {
     const queries = {
         total: "SELECT COUNT(*) as count FROM employees",
         new_year: "SELECT COUNT(*) as count FROM employees WHERE registration_time IS NOT NULL",
-        sport_day: "SELECT COUNT(*) as count FROM employees WHERE sport_day_registered = 1",
-        checked_in: "SELECT COUNT(*) as count FROM employees WHERE checked_in = 1",
-        all_three: "SELECT COUNT(*) as count FROM employees WHERE registration_time IS NOT NULL AND sport_day_registered = 1 AND checked_in = 1"
+        sport_day: "SELECT COUNT(*) as count FROM employees WHERE sport_day_registered = TRUE", // Postgres: TRUE
+        checked_in: "SELECT COUNT(*) as count FROM employees WHERE checked_in = TRUE",
+        all_three: "SELECT COUNT(*) as count FROM employees WHERE registration_time IS NOT NULL AND sport_day_registered = TRUE AND checked_in = TRUE"
     };
 
-    const results = {};
-    const promises = Object.keys(queries).map(key => {
-        return new Promise((resolve, reject) => {
-            db.get(queries[key], [], (err, row) => {
-                if (err) return reject(err);
-                results[key] = row.count;
-                resolve();
-            });
-        });
-    });
-
-    Promise.all(promises)
-        .then(() => {
-            res.status(200).json({ data: results });
-        })
-        .catch(err => {
-            res.status(500).json({ "error": "Database error while summarizing status: " + err.message });
-        });
+    try {
+        const results = {};
+        // รัน Query ทั้งหมดพร้อมกัน
+        for (const [key, query] of Object.entries(queries)) {
+            const result = await db.query(query);
+            // Postgres COUNT(*) คืนค่าเป็น String (bigint) ต้องแปลงเป็น Int
+            results[key] = parseInt(result.rows[0].count);
+        }
+        res.status(200).json({ data: results });
+    } catch (err) {
+        res.status(500).json({ "error": "Database error: " + err.message });
+    }
 });
 
-// POST /checkin - Check in an employee (Admin) ... (โค้ดเดิม)
-
-
-
-// POST /checkin - Check in an employee (Admin)
-app.post('/checkin', (req, res) => {
+// POST /checkin
+app.post('/checkin', async (req, res) => {
     const { employeeId } = req.body;
     if (!employeeId) { return res.status(400).json({ "error": "กรุณากรอกรหัสพนักงาน" }); }
+    
     const employeeIdUpper = employeeId.toUpperCase();
-    const sql = "SELECT * FROM employees WHERE employee_id = ?";
-    db.get(sql, [employeeIdUpper], (err, row) => {
-        if (err) { return res.status(500).json({ "error": err.message }); }
+    const sql = "SELECT * FROM employees WHERE employee_id = $1";
+
+    try {
+        const result = await db.query(sql, [employeeIdUpper]);
+        const row = result.rows[0];
+
         if (!row) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้ในระบบ" }); }
-        if (row.checked_in) {
+        
+        if (row.checked_in) { // Postgres returns boolean true/false directly
             return res.status(409).json({
                 "error": "พนักงานคนนี้เช็คอินไปแล้ว",
-                "data": { // Include data for display
-                    "firstName": row.first_name, "lastName": row.last_name, "department": row.department,
-                    "employeeId": row.employee_id, "checkin_time": row.checkin_time
+                "data": {
+                    "firstName": row.first_name, "lastName": row.last_name, 
+                    "department": row.department, "employeeId": row.employee_id, 
+                    "checkin_time": row.checkin_time
                 }
             });
         }
-        // Use ISO 8601 format
-        const updateSql = `UPDATE employees SET checked_in = 1, checkin_time = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE employee_id = ?`;
-        db.run(updateSql, [employeeIdUpper], function(err) {
-            if (err) { return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูลเช็คอิน" }); }
-            res.status(200).json({
-                "message": "เช็คอินสำเร็จ!",
-                "data": { "firstName": row.first_name, "lastName": row.last_name, "department": row.department, "employeeId": row.employee_id }
-            });
-        });
-    });
-});
-// (ใหม่) POST /sportday-register - ลงทะเบียนเข้าร่วมงานกีฬาสี
-app.post('/sportday-register', (req, res) => {
-    const { employeeId } = req.body;
-    if (!employeeId) { 
-        return res.status(400).json({ "error": "กรุณากรอกรหัสพนักงาน" }); 
-    }
-    const employeeIdUpper = employeeId.toUpperCase();
 
-    const sql = "SELECT * FROM employees WHERE employee_id = ?";
-    db.get(sql, [employeeIdUpper], (err, row) => {
-        if (err) { return res.status(500).json({ "error": err.message }); }
+        const updateSql = `UPDATE employees SET checked_in = TRUE, checkin_time = NOW() WHERE employee_id = $1`;
+        await db.query(updateSql, [employeeIdUpper]);
+        
+        res.status(200).json({
+            "message": "เช็คอินสำเร็จ!",
+            "data": { "firstName": row.first_name, "lastName": row.last_name, "department": row.department, "employeeId": row.employee_id }
+        });
+
+    } catch (err) {
+        res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูลเช็คอิน: " + err.message });
+    }
+});
+
+// POST /sportday-register
+app.post('/sportday-register', async (req, res) => {
+    const { employeeId } = req.body;
+    if (!employeeId) { return res.status(400).json({ "error": "กรุณากรอกรหัสพนักงาน" }); }
+    
+    const employeeIdUpper = employeeId.toUpperCase();
+    const sql = "SELECT * FROM employees WHERE employee_id = $1";
+
+    try {
+        const result = await db.query(sql, [employeeIdUpper]);
+        const row = result.rows[0];
+
         if (!row) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้ในระบบ" }); }
         
-        // ตรวจสอบว่าลงทะเบียนไปแล้วหรือยัง
         if (row.sport_day_registered) {
             return res.status(409).json({
                 "error": "คุณได้ลงทะเบียนเข้าร่วมงานกีฬาสีไปแล้ว",
@@ -244,419 +269,424 @@ app.post('/sportday-register', (req, res) => {
             });
         }
 
-        // ถ้ายัง ให้ลงทะเบียน
-        const updateSql = `UPDATE employees 
-                           SET sport_day_registered = 1, sport_day_reg_time = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') 
-                           WHERE employee_id = ?`;
-                           
-        db.run(updateSql, [employeeIdUpper], function(err) {
-            if (err) { return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกข้อมูล" }); }
-            res.status(200).json({
-                "message": "ลงทะเบียนเข้าร่วมงานกีฬาสีสำเร็จ!",
-                "data": { 
-                    "firstName": row.first_name, 
-                    "lastName": row.last_name, 
-                    "department": row.department, 
-                    "employeeId": row.employee_id 
-                }
-            });
+        const updateSql = `UPDATE employees SET sport_day_registered = TRUE, sport_day_reg_time = NOW() WHERE employee_id = $1`;
+        await db.query(updateSql, [employeeIdUpper]);
+
+        res.status(200).json({
+            "message": "ลงทะเบียนเข้าร่วมงานกีฬาสีสำเร็จ!",
+            "data": { 
+                "firstName": row.first_name, "lastName": row.last_name, 
+                "department": row.department, "employeeId": row.employee_id 
+            }
         });
-    });
+
+    } catch (err) {
+        res.status(500).json({ "error": "เกิดข้อผิดพลาด: " + err.message });
+    }
 });
 
-// DELETE /employees/all - Delete all employee data (Admin)
-app.delete('/employees/all', (req, res) => {
-    // (คงไว้) จุดเดียวที่ตรวจสอบรหัสผ่าน
+// DELETE /employees/all
+app.delete('/employees/all', async (req, res) => {
     const { adminPassword } = req.body;
-    if (adminPassword !== CORRECT_PASSWORD) {
+    // ใช้ 'admin' เป็นรหัสผ่าน default (ตามโค้ดเดิม)
+    if (adminPassword !== 'admin') {
         return res.status(401).json({ "error": "รหัสผ่าน Admin ไม่ถูกต้อง" });
     }
-    db.serialize(() => {
-        db.run('BEGIN TRANSACTION');
-        db.run("DELETE FROM employees"); // Clear employees
-        db.run("DELETE FROM votes"); // Clear votes log
-        db.run("UPDATE candidates SET votes = 0"); // Reset candidate votes
-        db.run('COMMIT', (err) => {
-            if (err) {
-                db.run('ROLLBACK');
-                return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการยืนยัน Transaction: " + err.message });
-            }
-            res.status(200).json({ "message": "ลบข้อมูลพนักงาน, ข้อมูลการโหวต, และรีเซ็ตคะแนนทั้งหมดสำเร็จ" });
-        });
-    });
+
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query("DELETE FROM employees");
+        await client.query("DELETE FROM votes");
+        await client.query("UPDATE candidates SET votes = 0");
+        await client.query('COMMIT');
+        
+        res.status(200).json({ "message": "ลบข้อมูลพนักงาน, ข้อมูลการโหวต, และรีเซ็ตคะแนนทั้งหมดสำเร็จ" });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ "error": "เกิดข้อผิดพลาด: " + err.message });
+    } finally {
+        client.release();
+    }
 });
 
-// DELETE /employees/:id - Delete a single employee (Admin)
-app.delete('/employees/:id', (req, res) => {
-    // (ลบการตรวจสอบรหัสผ่าน)
-    const sql = "DELETE FROM employees WHERE id = ?";
-    db.run(sql, [req.params.id], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        if (this.changes === 0) { return res.status(404).json({ "error": "ไม่พบข้อมูลพนักงานที่ต้องการลบ" }); }
+// DELETE /employees/:id
+app.delete('/employees/:id', async (req, res) => {
+    const sql = "DELETE FROM employees WHERE id = $1";
+    try {
+        const result = await db.query(sql, [req.params.id]);
+        if (result.rowCount === 0) { 
+            return res.status(404).json({ "error": "ไม่พบข้อมูลพนักงานที่ต้องการลบ" }); 
+        }
         res.status(200).json({ "message": "ลบข้อมูลสำเร็จ" });
-    });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
 // --- Prize Endpoints ---
 
-// GET /draw - Select winners for the draw
-app.get('/draw', (req, res) => {
-    // 1. Get the number of prizes
-    db.get("SELECT COUNT(*) as count FROM prizes", [], (err, prizeRow) => {
-        if (err) { return res.status(500).json({ "error": "Database error getting prize count: " + err.message }); }
-        const numberOfWinners = prizeRow.count;
+// GET /draw
+app.get('/draw', async (req, res) => {
+    try {
+        const prizeRes = await db.query("SELECT COUNT(*) as count FROM prizes");
+        const numberOfWinners = parseInt(prizeRes.rows[0].count);
+
         if (numberOfWinners === 0) {
             return res.status(400).json({ "error": "กรุณาเพิ่มรางวัลในหน้า 'จัดการรางวัล' ก่อน" });
         }
 
-        // 2. Select eligible employees (checked_in = 1)
-        const sql = "SELECT id, first_name, last_name, employee_id, department FROM employees WHERE checked_in = 1 AND sport_day_registered = 1 AND registration_time IS NOT NULL";
-        db.all(sql, [], (err, rows) => {
-            if (err) { return res.status(500).json({ "error": "Database error getting checked-in employees: " + err.message }); }
-            if (rows.length === 0) {
-                return res.status(400).json({ "error": "ยังไม่มีผู้มีสิทธิ์ครบทั้ง 3 เงื่อนไข (ลงทะเบียนปีใหม่, กีฬาสี, และเช็คอิน)" });
-            }
-            if (rows.length < numberOfWinners) {
-                return res.status(400).json({ "error": `มีผู้มีสิทธิ์ครบ (${rows.length} คน) น้อยกว่าจำนวนรางวัล (${numberOfWinners} รางวัล)` });
-            }
+        // PostgreSQL: boolean = TRUE
+        const sql = `
+            SELECT id, first_name, last_name, employee_id, department 
+            FROM employees 
+            WHERE checked_in = TRUE AND sport_day_registered = TRUE AND registration_time IS NOT NULL
+        `;
+        const empRes = await db.query(sql);
+        const rows = empRes.rows;
 
-            // 3. Shuffle the eligible employees (Fisher-Yates shuffle)
-            for (let i = rows.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [rows[i], rows[j]] = [rows[j], rows[i]];
-            }
+        if (rows.length === 0) {
+            return res.status(400).json({ "error": "ยังไม่มีผู้มีสิทธิ์ครบทั้ง 3 เงื่อนไข" });
+        }
+        if (rows.length < numberOfWinners) {
+            return res.status(400).json({ "error": `มีผู้มีสิทธิ์ครบ (${rows.length} คน) น้อยกว่าจำนวนรางวัล (${numberOfWinners} รางวัล)` });
+        }
 
-            // 4. Select the winners
-            const winners = rows.slice(0, numberOfWinners);
-            res.status(200).json({ "message": "success", "data": winners });
-        });
-    });
-});
+        // Shuffle (Fisher-Yates) - JS Logic
+        for (let i = rows.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [rows[i], rows[j]] = [rows[j], rows[i]];
+        }
 
-// GET /prizes - Get all prizes
-app.get('/prizes', (req, res) => {
-    const sql = "SELECT * FROM prizes ORDER BY id ASC"; // Order prizes consistently
-    db.all(sql, [], (err, rows) => {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        res.status(200).json({ data: rows });
-    });
-});
+        const winners = rows.slice(0, numberOfWinners);
+        res.status(200).json({ "message": "success", "data": winners });
 
-// POST /prizes - Add a new prize
-app.post('/prizes', (req, res) => {
-    // (ลบ adminPassword ออกจาก const)
-    const { name } = req.body;
-    
-    // (ลบการตรวจสอบรหัสผ่าน)
-    if (!name) {
-        return res.status(400).json({ "error": "กรุณากรอกชื่อรางวัล" });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
     }
-    const sql = "INSERT INTO prizes (name) VALUES (?)";
-    db.run(sql, [name], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        res.status(201).json({ "message": "เพิ่มรางวัลสำเร็จ", "id": this.lastID });
-    });
 });
 
-// PUT /prizes/:id - Edit an existing prize
-app.put('/prizes/:id', (req, res) => {
-    // (ลบ adminPassword ออกจาก const)
-    const { name } = req.body;
-    
-    // (ลบการตรวจสอบรหัสผ่าน)
-    if (!name) {
-        return res.status(400).json({ "error": "กรุณากรอกชื่อรางวัล" });
+// GET /prizes
+app.get('/prizes', async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM prizes ORDER BY id ASC");
+        res.status(200).json({ data: result.rows });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
     }
-    const sql = "UPDATE prizes SET name = ? WHERE id = ?";
-    db.run(sql, [name, req.params.id], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        if (this.changes === 0) { return res.status(404).json({ "error": "ไม่พบรางวัลที่ต้องการแก้ไข" }); }
+});
+
+// POST /prizes
+app.post('/prizes', async (req, res) => {
+    const { name } = req.body;
+    if (!name) { return res.status(400).json({ "error": "กรุณากรอกชื่อรางวัล" }); }
+    
+    try {
+        // PostgreSQL: RETURNING id
+        const sql = "INSERT INTO prizes (name) VALUES ($1) RETURNING id";
+        const result = await db.query(sql, [name]);
+        res.status(201).json({ "message": "เพิ่มรางวัลสำเร็จ", "id": result.rows[0].id });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
+});
+
+// PUT /prizes/:id
+app.put('/prizes/:id', async (req, res) => {
+    const { name } = req.body;
+    if (!name) { return res.status(400).json({ "error": "กรุณากรอกชื่อรางวัล" }); }
+
+    try {
+        const sql = "UPDATE prizes SET name = $1 WHERE id = $2";
+        const result = await db.query(sql, [name, req.params.id]);
+        if (result.rowCount === 0) { return res.status(404).json({ "error": "ไม่พบรางวัลที่ต้องการแก้ไข" }); }
         res.status(200).json({ "message": "แก้ไขรางวัลสำเร็จ" });
-    });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// DELETE /prizes/:id - Delete a prize
-app.delete('/prizes/:id', (req, res) => {
-    // (ลบการตรวจสอบรหัสผ่าน)
-    const sql = "DELETE FROM prizes WHERE id = ?";
-    db.run(sql, [req.params.id], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        if (this.changes === 0) { return res.status(404).json({ "error": "ไม่พบรางวัลที่ต้องการลบ" }); }
+// DELETE /prizes/:id
+app.delete('/prizes/:id', async (req, res) => {
+    try {
+        const result = await db.query("DELETE FROM prizes WHERE id = $1", [req.params.id]);
+        if (result.rowCount === 0) { return res.status(404).json({ "error": "ไม่พบรางวัลที่ต้องการลบ" }); }
         res.status(200).json({ "message": "ลบรางวัลสำเร็จ" });
-    });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// POST /prizes/reset - Reset prizes to default
-app.post('/prizes/reset', (req, res) => {
-    // (ลบการตรวจสอบรหัสผ่าน)
-    db.serialize(() => {
-        db.run("DELETE FROM prizes"); // Clear existing prizes
-        const insert = 'INSERT INTO prizes (name) VALUES (?)';
-        // Add default prizes
-        db.run(insert, ["รางวัลที่ 5: บัตรกำนัล 2,000 บาท"]);
-        db.run(insert, ["รางวัลที่ 4: พัดลมไอน้ำ"]);
-        db.run(insert, ["รางวัลที่ 3: Smart TV 55 นิ้ว"]);
-        db.run(insert, ["รางวัลที่ 2: ทองคำ 1 บาท"]);
-        db.run(insert, ["รางวัลที่ 1: iPhone 16"], (err) => { // Use callback on the last insert
-             if (err) { return res.status(500).json({ "error": "Failed to repopulate prizes" }); }
-             res.status(200).json({ "message": "รีเซ็ตรายการรางวัลเป็นค่าเริ่มต้นสำเร็จ" });
-        });
-    });
+// POST /prizes/reset
+app.post('/prizes/reset', async (req, res) => {
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query("DELETE FROM prizes");
+        
+        const defaultPrizes = [
+            "รางวัลที่ 5: บัตรกำนัล 2,000 บาท",
+            "รางวัลที่ 4: พัดลมไอน้ำ",
+            "รางวัลที่ 3: Smart TV 55 นิ้ว",
+            "รางวัลที่ 2: ทองคำ 1 บาท",
+            "รางวัลที่ 1: iPhone 16"
+        ];
+        
+        for (const p of defaultPrizes) {
+            await client.query("INSERT INTO prizes (name) VALUES ($1)", [p]);
+        }
+
+        await client.query('COMMIT');
+        res.status(200).json({ "message": "รีเซ็ตรายการรางวัลเป็นค่าเริ่มต้นสำเร็จ" });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ "error": "Failed to repopulate prizes: " + err.message });
+    } finally {
+        client.release();
+    }
 });
 
 // --- Vote Endpoints ---
-// (ใหม่) GET /vote-status - Check if voting is open
-app.get('/vote-status', (req, res) => {
-    // Check if the deadline has passed
-    const now = new Date().toISOString();
-    db.get("SELECT * FROM vote_status WHERE id = 1", [], (err, row) => {
-        if (err) { return res.status(500).json({ "error": err.message }); }
 
-        if (row.is_open && row.deadline && row.deadline < now) {
-            // Deadline has passed. Auto-close it.
-            db.run("UPDATE vote_status SET is_open = 0 WHERE id = 1", [], (updateErr) => {
-                if (updateErr) { return res.status(500).json({ "error": updateErr.message }); }
-                res.status(200).json({ is_open: false, deadline: row.deadline });
-            });
-        } else {
-            // Return current status
-            res.status(200).json({ is_open: !!row.is_open, deadline: row.deadline });
+// GET /vote-status
+app.get('/vote-status', async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM vote_status WHERE id = 1");
+        const row = result.rows[0];
+        
+        const now = new Date();
+        // เช็ค Deadline
+        if (row.is_open && row.deadline && new Date(row.deadline) < now) {
+            await db.query("UPDATE vote_status SET is_open = FALSE WHERE id = 1");
+            return res.status(200).json({ is_open: false, deadline: row.deadline });
         }
-    });
+        
+        res.status(200).json({ is_open: !!row.is_open, deadline: row.deadline });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// (ใหม่) POST /vote/start - Start the voting period
-app.post('/vote/start', (req, res) => {
-    // (ลบ adminPassword ออกจาก const)
+// POST /vote/start
+app.post('/vote/start', async (req, res) => {
     const { durationInMinutes } = req.body;
-    
-    // (ลบการตรวจสอบรหัสผ่าน)
     if (!durationInMinutes || durationInMinutes <= 0) {
-        return res.status(400).json({ "error": "กรุณากำหนดระยะเวลา (นาที) ให้ถูกต้อง" });
+        return res.status(400).json({ "error": "กรุณากำหนดระยะเวลาให้ถูกต้อง" });
     }
 
     const now = new Date();
     const deadline = new Date(now.getTime() + durationInMinutes * 60000);
-    const deadlineISO = deadline.toISOString(); // Use ISO format
+    const deadlineISO = deadline.toISOString();
 
-    const sql = "UPDATE vote_status SET is_open = 1, deadline = ? WHERE id = 1";
-    db.run(sql, [deadlineISO], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
+    try {
+        const sql = "UPDATE vote_status SET is_open = TRUE, deadline = $1 WHERE id = 1";
+        await db.query(sql, [deadlineISO]);
         res.status(201).json({ "message": "เปิดระบบโหวตสำเร็จ!", "deadline": deadlineISO });
-    });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// (ใหม่) POST /vote/close - Manually close voting
-app.post('/vote/close', (req, res) => {
-    // (ลบการตรวจสอบรหัสผ่าน)
-    const sql = "UPDATE vote_status SET is_open = 0, deadline = NULL WHERE id = 1";
-    db.run(sql, [], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
+// POST /vote/close
+app.post('/vote/close', async (req, res) => {
+    try {
+        await db.query("UPDATE vote_status SET is_open = FALSE, deadline = NULL WHERE id = 1");
         res.status(200).json({ "message": "ปิดระบบโหวตสำเร็จ" });
-    });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// GET /candidates - Get all candidates (includes votes for management/results)
-app.get('/candidates', (req, res) => {
-    const sql = "SELECT id, name, department, votes FROM candidates ORDER BY votes DESC"; // Order by votes for results display
-    db.all(sql, [], (err, rows) => {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        res.status(200).json({ data: rows });
-    });
+// GET /candidates (Also used for results)
+app.get('/candidates', async (req, res) => {
+    try {
+        const result = await db.query("SELECT id, name, department, votes FROM candidates ORDER BY votes DESC");
+        res.status(200).json({ data: result.rows });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// POST /vote - Submit a vote
-app.post('/vote', (req, res) => {
+// POST /vote
+app.post('/vote', async (req, res) => {
     const { employeeId, candidateId } = req.body;
-    if (!employeeId || !candidateId) { return res.status(400).json({ "error": "ข้อมูลไม่ครบถ้วน (vote)" }); }
+    if (!employeeId || !candidateId) { return res.status(400).json({ "error": "ข้อมูลไม่ครบถ้วน" }); }
+    
     const employeeIdUpper = employeeId.toUpperCase();
+    const client = await db.connect();
 
-    // (แก้ไข) 1. Check if voting is open
-    const now = new Date().toISOString();
-    db.get("SELECT * FROM vote_status WHERE id = 1", [], (err, statusRow) => {
-        if (err) { return res.status(500).json({ "error": "DB Error checking vote status: " + err.message }); }
+    try {
+        // 1. Check Vote Status
+        const statusRes = await client.query("SELECT * FROM vote_status WHERE id = 1");
+        const statusRow = statusRes.rows[0];
+        const now = new Date();
 
         if (!statusRow.is_open) {
-            return res.status(403).json({ "error": "ระบบโหวตยังไม่เปิดหรือปิดไปแล้ว" });
+            return res.status(403).json({ "error": "ระบบปิดอยู่" });
         }
-        if (statusRow.deadline && statusRow.deadline < now) {
-            // Auto-close if deadline passed
-            db.run("UPDATE vote_status SET is_open = 0 WHERE id = 1");
+        if (statusRow.deadline && new Date(statusRow.deadline) < now) {
+            await client.query("UPDATE vote_status SET is_open = FALSE WHERE id = 1");
             return res.status(403).json({ "error": "หมดเวลาโหวตแล้ว" });
         }
 
-        // (Original Logic) Double-check check-in status on the server
-        db.get("SELECT checked_in FROM employees WHERE employee_id = ?", [employeeIdUpper], (err, empRow) => {
-            if (err) { return res.status(500).json({ "error": "DB Error checking employee status: " + err.message }); }
-            if (!empRow) { return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้" }); } 
-            if (!empRow.checked_in) { return res.status(403).json({ "error": "พนักงานยังไม่ได้เช็คอิน (Server Check)" }); } 
+        await client.query('BEGIN');
 
-            // Check if already voted
-            db.get("SELECT * FROM votes WHERE employee_id = ?", [employeeIdUpper], (err, voteRow) => {
-                if (err) { return res.status(500).json({ "error": "DB Error checking vote status: " + err.message }); }
-                if (voteRow) { return res.status(409).json({ "error": "คุณได้ทำการโหวตไปแล้ว (Server Check)" }); }
+        // 2. Check Employee Eligibility
+        const empRes = await client.query("SELECT checked_in FROM employees WHERE employee_id = $1", [employeeIdUpper]);
+        const empRow = empRes.rows[0];
+        
+        if (!empRow) { 
+            await client.query('ROLLBACK');
+            return res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้" }); 
+        }
+        if (!empRow.checked_in) { 
+            await client.query('ROLLBACK');
+            return res.status(403).json({ "error": "พนักงานยังไม่ได้เช็คอิน" }); 
+        }
 
-                // Proceed with voting in a transaction
-                db.serialize(() => {
-                    db.run('BEGIN TRANSACTION');
-                    db.run("INSERT INTO votes (employee_id) VALUES (?)", [employeeIdUpper], (err) => {
-                        if (err) {
-                            db.run('ROLLBACK');
-                            return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการบันทึกสิทธิ์โหวต" });
-                        }
-                    });
-                    db.run("UPDATE candidates SET votes = votes + 1 WHERE id = ?", [candidateId], (err) => {
-                         if (err) {
-                            db.run('ROLLBACK');
-                            return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการอัปเดตคะแนน" });
-                        }
-                    });
-                    db.run('COMMIT', (err) => {
-                        if (err) {
-                            db.run('ROLLBACK'); 
-                            return res.status(500).json({ "error": "เกิดข้อผิดพลาดในการยืนยันผลโหวต" });
-                        }
-                        res.status(200).json({ "message": "โหวตสำเร็จ!" });
-                    });
-                });
-            });
-        });
-    });
-});
+        // 3. Insert Vote (Postgres will throw error on Unique Constraint if exists)
+        const voteSql = "INSERT INTO votes (employee_id) VALUES ($1)";
+        await client.query(voteSql, [employeeIdUpper]);
 
+        // 4. Update Score
+        await client.query("UPDATE candidates SET votes = votes + 1 WHERE id = $1", [candidateId]);
 
-// GET /results - Get vote results (same as /candidates now)
-app.get('/results', (req, res) => {
-    const sql = "SELECT name, department, votes FROM candidates ORDER BY votes DESC";
-    db.all(sql, [], (err, rows) => {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        res.status(200).json({ data: rows });
-    });
-});
+        await client.query('COMMIT');
+        res.status(200).json({ "message": "โหวตสำเร็จ!" });
 
-// POST /candidates - Add a new candidate
-app.post('/candidates', (req, res) => {
-    // (ลบ adminPassword ออกจาก const)
-    const { name, department } = req.body;
-    
-    // (ลบการตรวจสอบรหัสผ่าน)
-    if (!name || !department) {
-        return res.status(400).json({ "error": "กรุณากรอกชื่อและฝ่าย" });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        // Postgres Error Code 23505 = Unique Violation
+        if (err.code === '23505') {
+            return res.status(409).json({ "error": "คุณได้ทำการโหวตไปแล้ว" });
+        }
+        res.status(500).json({ "error": "Error voting: " + err.message });
+    } finally {
+        client.release();
     }
-    const sql = "INSERT INTO candidates (name, department) VALUES (?, ?)";
-    db.run(sql, [name, department], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        res.status(201).json({ "message": "เพิ่มผู้เข้าประกวดสำเร็จ", "id": this.lastID });
-    });
 });
 
-
-
-// PUT /candidates/:id - Edit a candidate
-app.put('/candidates/:id', (req, res) => {
-    // (ลบ adminPassword ออกจาก const)
-    const { name, department } = req.body;
-    
-    // (ลบการตรวจสอบรหัสผ่าน)
-    if (!name || !department) {
-        return res.status(400).json({ "error": "กรุณากรอกชื่อและฝ่าย" });
+// GET /results (Same as candidates)
+app.get('/results', async (req, res) => {
+    try {
+        const result = await db.query("SELECT name, department, votes FROM candidates ORDER BY votes DESC");
+        res.status(200).json({ data: result.rows });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
     }
-    const sql = "UPDATE candidates SET name = ?, department = ? WHERE id = ?";
-    db.run(sql, [name, department, req.params.id], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        if (this.changes === 0) { return res.status(404).json({ "error": "ไม่พบผู้เข้าประกวดที่ต้องการแก้ไข" }); }
-        res.status(200).json({ "message": "แก้ไขผู้เข้าประกวดสำเร็จ" });
-    });
 });
 
-// DELETE /candidates/:id - Delete a candidate
-app.delete('/candidates/:id', (req, res) => {
-    // (ลบการตรวจสอบรหัสผ่าน)
+// POST /candidates
+app.post('/candidates', async (req, res) => {
+    const { name, department } = req.body;
+    if (!name || !department) { return res.status(400).json({ "error": "กรุณากรอกข้อมูล" }); }
     
-    // Note: Deleting a candidate also implicitly removes their votes,
-    // but does not give back the vote permission to employees who voted for them.
-    const sql = "DELETE FROM candidates WHERE id = ?";
-    db.run(sql, [req.params.id], function(err) {
-        if (err) { return res.status(500).json({ "error": err.message }); }
-        if (this.changes === 0) { return res.status(404).json({ "error": "ไม่พบผู้เข้าประกวดที่ต้องการลบ" }); }
-        res.status(200).json({ "message": "ลบผู้เข้าประกวดสำเร็จ" });
-    });
+    try {
+        const sql = "INSERT INTO candidates (name, department) VALUES ($1, $2) RETURNING id";
+        const result = await db.query(sql, [name, department]);
+        res.status(201).json({ "message": "เพิ่มผู้เข้าประกวดสำเร็จ", "id": result.rows[0].id });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// POST /candidates/reset - Reset candidates to default
-app.post('/candidates/reset', (req, res) => {
-    // (ลบการตรวจสอบรหัสผ่าน)
-    
-    db.serialize(() => {
-        db.run("DELETE FROM candidates"); // Clear all candidates
-        db.run("DELETE FROM votes"); // IMPORTANT: Clear all vote records as well
-        const insert = 'INSERT INTO candidates (name, department) VALUES (?,?)';
-        // Add default candidates
-        db.run(insert, ["สมชาย ใจดี", "ฝ่ายขาย"]);
-        db.run(insert, ["สมศรี มีสุข", "ฝ่ายการตลาด"]);
-        db.run(insert, ["พรเทพ มุ่งมั่น", "ฝ่ายบุคคล"], (err) => { // Callback on last insert
-             if (err) { return res.status(500).json({ "error": "Failed to repopulate candidates" }); }
-             res.status(200).json({ "message": "รีเซ็ตผู้เข้าประกวดและเคลียร์ผลโหวตทั้งหมดสำเร็จ" });
-        });
-    });
+// PUT /candidates/:id
+app.put('/candidates/:id', async (req, res) => {
+    const { name, department } = req.body;
+    if (!name || !department) { return res.status(400).json({ "error": "กรุณากรอกข้อมูล" }); }
+
+    try {
+        const sql = "UPDATE candidates SET name = $1, department = $2 WHERE id = $3";
+        const result = await db.query(sql, [name, department, req.params.id]);
+        if (result.rowCount === 0) { return res.status(404).json({ "error": "ไม่พบผู้เข้าประกวด" }); }
+        res.status(200).json({ "message": "แก้ไขสำเร็จ" });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
 });
 
-// GET /check-vote-eligibility/:employeeId - Check if employee can vote
-app.get('/check-vote-eligibility/:employeeId', (req, res) => {
+// DELETE /candidates/:id
+app.delete('/candidates/:id', async (req, res) => {
+    try {
+        const result = await db.query("DELETE FROM candidates WHERE id = $1", [req.params.id]);
+        if (result.rowCount === 0) { return res.status(404).json({ "error": "ไม่พบผู้เข้าประกวด" }); }
+        res.status(200).json({ "message": "ลบสำเร็จ" });
+    } catch (err) {
+        res.status(500).json({ "error": err.message });
+    }
+});
+
+// POST /candidates/reset
+app.post('/candidates/reset', async (req, res) => {
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query("DELETE FROM candidates");
+        await client.query("DELETE FROM votes");
+
+        await client.query("INSERT INTO candidates (name, department) VALUES ($1, $2), ($3, $4), ($5, $6)", 
+            ["สมชาย ใจดี", "ฝ่ายขาย", "สมศรี มีสุข", "ฝ่ายการตลาด", "พรเทพ มุ่งมั่น", "ฝ่ายบุคคล"]);
+
+        await client.query('COMMIT');
+        res.status(200).json({ "message": "รีเซ็ตผู้เข้าประกวดและเคลียร์ผลโหวตสำเร็จ" });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ "error": "Failed to reset candidates: " + err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// GET /check-vote-eligibility/:employeeId
+app.get('/check-vote-eligibility/:employeeId', async (req, res) => {
     const employeeId = req.params.employeeId.toUpperCase();
-    if (!employeeId) {
-        return res.status(400).json({ status: 'error', message: "กรุณากรอกรหัสพนักงาน" });
-    }
-
-    // (แก้ไข) 1. Check if voting is open
-    const now = new Date().toISOString();
-    db.get("SELECT * FROM vote_status WHERE id = 1", [], (err, statusRow) => {
-        if (err) { return res.status(500).json({ status: 'error', message: "DB Error: " + err.message }); }
+    
+    try {
+        // 1. Check Vote Status
+        const statusRes = await db.query("SELECT * FROM vote_status WHERE id = 1");
+        const statusRow = statusRes.rows[0];
+        const now = new Date();
 
         if (!statusRow.is_open) {
-            return res.status(403).json({ status: 'vote_closed', message: "ระบบโหวตยังไม่เปิดหรือปิดไปแล้ว" });
+            return res.status(403).json({ status: 'vote_closed', message: "ระบบปิดโหวตแล้ว" });
         }
-        if (statusRow.deadline && statusRow.deadline < now) {
-            // Auto-close if deadline passed
-            db.run("UPDATE vote_status SET is_open = 0 WHERE id = 1");
+        if (statusRow.deadline && new Date(statusRow.deadline) < now) {
+            await db.query("UPDATE vote_status SET is_open = FALSE WHERE id = 1");
             return res.status(403).json({ status: 'vote_closed', message: "หมดเวลาโหวตแล้ว" });
         }
 
-        // (Original Logic) 2. Check if employee exists and is checked in
-        const sqlEmployee = "SELECT checked_in FROM employees WHERE employee_id = ?";
-        db.get(sqlEmployee, [employeeId], (err, empRow) => {
-            if (err) { return res.status(500).json({ status: 'error', message: "DB Error: " + err.message }); }
-            if (!empRow) {
-                return res.status(404).json({ status: 'not_found', message: "ไม่พบรหัสพนักงานนี้" });
-            }
-            if (!empRow.checked_in) {
-                return res.status(403).json({ status: 'not_checked_in', message: "คุณยังไม่ได้เช็คอินเข้าร่วมงาน" });
-            }
+        // 2. Check Employee Exists & Checked In
+        const empRes = await db.query("SELECT checked_in FROM employees WHERE employee_id = $1", [employeeId]);
+        const empRow = empRes.rows[0];
 
-            // 3. Check if employee has already voted
-            const sqlVote = "SELECT * FROM votes WHERE employee_id = ?";
-            db.get(sqlVote, [employeeId], (err, voteRow) => {
-                if (err) { return res.status(500).json({ status: 'error', message: "DB Error: " + err.message }); }
-                if (voteRow) {
-                    return res.status(409).json({ status: 'already_voted', message: "คุณได้ทำการโหวตไปแล้ว" });
-                }
-                // (แก้ไข) ส่งเวลาปิดโหวตกลับไปด้วย
-                res.status(200).json({ 
-                    status: 'eligible', 
-                    message: `คุณมีสิทธิ์โหวต (ปิดโหวต ${new Date(statusRow.deadline).toLocaleTimeString('th-TH')})`,
-                    deadline: statusRow.deadline // <-- (ใหม่) ส่งเวลาปิดโหวต (raw) กลับไปด้วย
-                });
-            });
+        if (!empRow) {
+            return res.status(404).json({ status: 'not_found', message: "ไม่พบรหัสพนักงาน" });
+        }
+        if (!empRow.checked_in) {
+            return res.status(403).json({ status: 'not_checked_in', message: "ยังไม่ได้เช็คอิน" });
+        }
+
+        // 3. Check Already Voted
+        const voteRes = await db.query("SELECT * FROM votes WHERE employee_id = $1", [employeeId]);
+        if (voteRes.rows.length > 0) {
+            return res.status(409).json({ status: 'already_voted', message: "คุณได้ทำการโหวตไปแล้ว" });
+        }
+
+        res.status(200).json({ 
+            status: 'eligible', 
+            message: `คุณมีสิทธิ์โหวต (ปิดโหวต ${new Date(statusRow.deadline).toLocaleTimeString('th-TH')})`,
+            deadline: statusRow.deadline
         });
-    });
+
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: err.message });
+    }
 });
 
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-// --- Start Server ---
-app.listen(PORT, '0.0.0.0', () => { // <--- เพิ่ม '0.0.0.0' ตรงนี้
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-    console.log(`(Now accepting connections from any IP on port ${PORT})`);
 });
