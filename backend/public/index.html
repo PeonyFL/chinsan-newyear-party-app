@@ -7,6 +7,7 @@
     <link href="vendor/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-light">
@@ -14,9 +15,9 @@
     <div class="container my-5">
         <div class="card shadow-sm p-4 p-md-5 mx-auto" style="max-width: 500px;" id="main-card">
 
-            <div class="image">
-                <img src="" alt="">
-            </div>
+            <div class="image text-center mb-3">
+    <img src="images/logo.png" alt="Company Logo" style="max-width: 150px; height: auto;">
+</div>
 
             <div class="language-switcher">
                 <button id="lang-th-btn" class="btn btn-sm lang-btn active" data-lang="th">ไทย</button>
@@ -26,13 +27,17 @@
             <div id="role-selection-section">
                 <h1 class="h3 mb-4 fw-bold text-center" data-key="role_selection_title">กรุณาเลือกบทบาทของคุณ</h1>
                 <div class="d-grid gap-3">
-                    <button id="select-employee-btn" class="btn btn-primary btn-lg" data-key="employee_button">พนักงาน (งานปีใหม่)</button>
-                    <button id="select-sportday-btn" class="btn btn-success btn-lg" data-key="sportday_button">ลงทะเบียนกีฬาสี</button>
-                    
-                    <button id="select-admin-btn" class="btn btn-secondary btn-lg">Admin</button>
+                    <button id="select-employee-btn" class="btn btn-primary btn-lg" data-key="employee_button">
+                        <i class="fa-solid fa-glass-cheers me-2"></i>พนักงาน (งานปีใหม่)
+                    </button>
+                    <button id="select-sportday-btn" class="btn btn-success btn-lg" data-key="sportday_button">
+                        <i class="fa-solid fa-person-running me-2"></i>ลงทะเบียนกีฬาสี
+                    </button>
+                    <button id="select-admin-btn" class="btn btn-secondary btn-lg">
+                        <i class="fa-solid fa-user-shield me-2"></i>Admin
+                    </button>
                 </div>
             </div>
-
             <div id="app-sections" class="d-none">
                 <div id="main-header-container">
                     <h1 class="h3 mb-3 fw-bold text-center" data-key="main_title">Chinsan New Year Party 2026</h1>

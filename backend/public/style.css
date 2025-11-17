@@ -1,16 +1,155 @@
+/* --- Winter Blue & Silver Theme --- */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+
 body {
     font-family: 'Sarabun', sans-serif;
+    /* พื้นหลังสีฟ้าอ่อนมากๆ (Ice Blue) */
+    background-color: #f4f8ff; 
+    color: #212529;
 }
 
+/* --- การ์ดหลัก (Clean & Modern) --- */
 .card {
     position: relative;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.1); /* เงาสีฟ้า */
+    border-radius: 0.5rem;
 }
 
 .card.fullscreen {
-    /* (แก้ไข) เพิ่ม max-width สำหรับหน้า Real-time */
     max-width: 1140px !important; 
 }
 
+/* --- หัวข้อ (Headings) --- */
+h1, h2, h3, h4, h5, .h1, .h2, .h3, .h4, .h5,
+[data-key="main_title"] {
+    color: #007bff; /* สีฟ้า (Bootstrap Blue) */
+}
+
+/* --- ข้อความทั่วไปและ Label --- */
+.text-muted {
+    color: #6c757d !important;
+}
+.form-label {
+    color: #495057;
+}
+
+/* --- ปุ่ม (Buttons) --- */
+.btn {
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ปุ่มหลัก (สีฟ้า) */
+.btn-primary {
+    background: linear-gradient(45deg, #0d6efd, #007bff);
+    border: none;
+    color: #fff;
+}
+.btn-primary:hover {
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
+    color: #fff;
+}
+
+/* ปุ่มสำเร็จ (สีเงิน/เทาอ่อน) */
+.btn-success {
+    background: linear-gradient(45deg, #ced4da, #adb5bd); /* Silver/Gray */
+    border: none;
+    color: #212529;
+}
+.btn-success:hover {
+    box-shadow: 0 0 15px rgba(173, 181, 189, 0.7);
+    color: #000;
+}
+
+/* ปุ่มรอง (สีเทาเข้ม) */
+.btn-secondary {
+    background: #6c757d;
+    border: 1px solid #6c757d;
+    color: #fff;
+}
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* ปุ่ม Outline (สีฟ้า) */
+.btn-outline-info, 
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-danger,
+.btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+.btn-outline-info:hover, 
+.btn-outline-secondary:hover,
+.btn-outline-success:hover,
+.btn-outline-danger:hover,
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+}
+
+/* ปุ่มอันตราย (สีแดง) */
+.btn-danger {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+/* --- ฟอร์ม (Inputs) --- */
+.form-control {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    color: #212529;
+}
+.form-control:focus {
+    background-color: #fff;
+    border-color: #0d6efd; /* Focus สีฟ้า */
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+    color: #212529;
+}
+
+/* --- Modal (หน้าต่าง Pop-up) --- */
+.modal-content {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    color: #212529;
+}
+.modal-header, .modal-footer {
+    border-color: #dee2e6;
+}
+.btn-close {
+    filter: none;
+}
+.list-group-item {
+    background-color: #fff;
+    border-color: #f0f0f0;
+    color: #212529;
+}
+
+/* --- ตาราง (Table) --- */
+.table { color: #212529; }
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: #f4f8ff; /* สลับแถวสีฟ้าอ่อน */
+    color: #212529;
+}
+.table-hover > tbody > tr:hover > * {
+    background-color: #d6e9ff; /* Hover สีฟ้า */
+    color: #000;
+}
+.table-light {
+    --bs-table-bg: #e7f3ff; /* หัวตารางสีฟ้าอ่อน */
+    --bs-table-border-color: #d6e9ff;
+    color: #0056b3; /* หัวตารางตัวอักษรสีฟ้าเข้ม */
+}
+
+/* --- Language Switcher --- */
 .language-switcher {
     position: absolute;
     top: 1rem;
@@ -20,11 +159,9 @@ body {
     z-index: 10;
 }
 .lang-btn {
-    background-color: #e9ecef;
-    color: #6c757d;
-    border: 1px solid #dee2e6;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+    background-color: #fff;
+    color: #0d6efd;
+    border: 1px solid #0d6efd;
 }
 .lang-btn.active {
     background-color: #0d6efd;
@@ -32,89 +169,77 @@ body {
     border-color: #0d6efd;
 }
 
+/* --- Slot Machine --- */
 .slot-machine {
     min-height: 140px;
+    background-color: #e9ecef; /* สีเทาอ่อน */
+    border: 1px solid #adb5bd;
+    border-radius: 0.5rem;
 }
-#slot-name { height: 60px; line-height: 60px; }
+#slot-name { 
+    height: 60px; line-height: 60px; 
+    color: #007bff; /* ชื่อที่สุ่มเป็นสีฟ้า */
+}
 #slot-id { height: 30px; line-height: 30px; }
 
 .list-group-item.drawing-now {
     font-weight: bold;
     color: #fff;
-    background-color: #dc3545;
+    background-color: #007bff; /* รางวัลที่กำลังสุ่ม (สีฟ้า) */
 }
 
-#checkinResultContainer .status-icon {
-    font-size: 2.5rem;
-}
+/* --- Check-in Result --- */
+#checkinResultContainer .status-icon { font-size: 2.5rem; }
+.alert-success { background-color: #d1e7dd; color: #0a3622; border-color: #a3cfbb; }
+.alert-warning { background-color: #fff3cd; color: #664d03; border-color: #ffecb5; }
+.alert-danger { background-color: #f8d7da; color: #58151c; border-color: #f5c2c7; }
 
-.winner-name {
-    font-weight: bold;
-    color: #0d6efd;
-}
+.winner-name { font-weight: bold; color: #007bff; }
 
+/* --- Vote --- */
 #candidate-list .form-check {
     padding: 1rem;
-    border: 1px solid #ddd;
+    border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     margin-bottom: 0.75rem;
     background-color: #f8f9fa;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
+}
+#candidate-list .form-check:hover {
+    background-color: #e7f3ff;
+    border-color: #0d6efd;
 }
 #candidate-list .form-check:has(input:checked) {
     background-color: #f8d7da;
     border-color: #f5c2c7;
+    color: #000;
 }
-#candidate-list .form-check-label {
-    width: 100%;
-    cursor: pointer;
+#candidate-list .form-check:has(input:checked) .candidate-name,
+#candidate-list .form-check:has(input:checked) .candidate-dept {
+    color: #58151c;
 }
-.candidate-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-.candidate-dept {
-    font-size: 0.9rem;
-    color: #6c757d;
-}
-#vote-results-list .list-group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-#vote-results-list .badge {
-    font-size: 1rem;
-}
+#candidate-list .form-check-label { width: 100%; cursor: pointer; }
+.candidate-name { font-weight: bold; font-size: 1.1rem; color: #007bff; }
+.candidate-dept { font-size: 0.9rem; color: #6c757d; }
+#vote-results-list .list-group-item { display: flex; justify-content: space-between; align-items: center; }
+#vote-results-list .badge { font-size: 1rem; background-color: #007bff; color: #fff; }
 
-/* (ใหม่) Styles for Real-time Results */
+/* --- Real-time Results --- */
 #realtime-candidates-container .candidate-result-item {
-    background-color: #f8f9fa;
+    background-color: #fff;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     padding: 1rem;
     margin-bottom: 0.75rem;
 }
-#realtime-candidates-container .candidate-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 0.5rem;
-}
-#realtime-candidates-container .candidate-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-#realtime-candidates-container .candidate-votes {
-    font-size: 1rem;
-    font-weight: bold;
-}
-#realtime-candidates-container .candidate-dept {
-    font-size: 0.9rem;
-    color: #6c757d;
-}
-.progress {
-    height: 1.5rem; /* ทำให้แถบสูงขึ้นเล็กน้อย */
-}
+#realtime-candidates-container .candidate-info { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+#realtime-candidates-container .candidate-name { font-weight: bold; font-size: 1.1rem; }
+#realtime-candidates-container .candidate-votes { font-size: 1rem; font-weight: bold; color: #007bff; }
+#realtime-candidates-container .candidate-dept { font-size: 0.9rem; color: #6c757d; }
+.progress { height: 1.5rem; background-color: #e9ecef; }
 .progress-bar {
-    font-size: 0.9rem; /* ปรับขนาดตัวเลข % */
+    font-size: 0.9rem;
+    background: linear-gradient(45deg, #0d6efd, #007bff);
+    color: #fff;
+    font-weight: bold;
 }
