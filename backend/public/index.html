@@ -13,11 +13,11 @@
 <body class="bg-light">
 
     <div class="container my-5">
-        <div class="card shadow-sm p-4 p-md-5 mx-auto" style="max-width: 500px;" id="main-card">
+        <div class="card shadow-sm p-4 p-md-5 mx-auto border-0" style="max-width: 500px;" id="main-card">
 
             <div class="image text-center mb-3">
-    <img src="images/logo.png" alt="Company Logo" style="max-width: 150px; height: auto;">
-</div>
+                <img src="images/logo.png" alt="Company Logo" class="img-fluid" style="max-width: 150px; height: auto;">
+            </div>
 
             <div class="language-switcher">
                 <button id="lang-th-btn" class="btn btn-sm lang-btn active" data-lang="th">ไทย</button>
@@ -25,7 +25,7 @@
             </div>
             
             <div id="role-selection-section">
-                <h1 class="h3 mb-4 fw-bold text-center" data-key="role_selection_title">กรุณาเลือกบทบาทของคุณ</h1>
+                <h1 class="h3 mb-4 fw-bold text-center border-bottom pb-3" data-key="role_selection_title">กรุณาเลือกบทบาทของคุณ</h1>
                 <div class="d-grid gap-3">
                     <button id="select-employee-btn" class="btn btn-primary btn-lg" data-key="employee_button">
                         <i class="fa-solid fa-glass-cheers me-2"></i>พนักงาน (งานปีใหม่)
@@ -39,19 +39,46 @@
                 </div>
             </div>
             <div id="app-sections" class="d-none">
-                <div id="main-header-container">
+                <div id="main-header-container" class="border-bottom pb-3">
                     <h1 class="h3 mb-3 fw-bold text-center" data-key="main_title">Chinsan New Year Party 2026</h1>
                     <p class="text-muted text-center mb-4" data-key="main_subtitle">กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน</p>
                 </div>
                 <div id="registration-section" class="d-none">
                     <form id="registrationForm">
-                        <div class="mb-3"><label for="firstName" class="form-label" data-key="form_firstname">ชื่อจริง</label><input type="text" class="form-control" id="firstName" required></div>
-                        <div class="mb-3"><label for="lastName" class="form-label" data-key="form_lastname">นามสกุล</label><input type="text" class="form-control" id="lastName" required></div>
-                        <div class="mb-3"><label for="department" class="form-label" data-key="form_department">ฝ่าย</label><input type="text" class="form-control" id="department" required></div>
-                        <div class="mb-3"><label for="employeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label><input type="text" class="form-control" id="employeeId" required></div>
+                        
+                        <div class="mb-3">
+                            <label for="firstName" class="form-label" data-key="form_firstname">ชื่อจริง</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user fa-fw"></i></span>
+                                <input type="text" class="form-control" id="firstName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lastName" class="form-label" data-key="form_lastname">นามสกุล</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user fa-fw"></i></span>
+                                <input type="text" class="form-control" id="lastName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="department" class="form-label" data-key="form_department">ฝ่าย</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-users fa-fw"></i></span>
+                                <input type="text" class="form-control" id="department" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="employeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card fa-fw"></i></span>
+                                <input type="text" class="form-control" id="employeeId" required>
+                            </div>
+                        </div>
+
                         <div class="d-grid"><button type="submit" class="btn btn-primary btn-lg" data-key="register_button">ลงทะเบียน</button></div>
                     </form>
                     <div class="text-center mt-3"><a href="#" id="showFindFormLink" data-key="forgot_qr_link">ลืม QR Code? / ค้นหา QR Code</a></div>
+                    
                     <div id="admin-actions-container" class="mt-4 pt-4 border-top">
                         <div class="row g-3">
                             <div class="col-12 d-grid">
@@ -116,7 +143,7 @@
                             </div>
 
                         </div>
-                        <div class="card bg-light mt-3">
+                        <div class="card bg-light mt-3 border-0">
                             <div class="card-body">
                                 <h6 class="card-title">อัปโหลดรายชื่อพนักงาน (Excel)</h6>
                                 <form id="uploadEmployeeForm">
@@ -138,7 +165,13 @@
                         <button type="button" id="backFromFindBtn" class="btn btn-secondary" data-key="back_to_admin_menu">กลับไปหน้า Admin</button>
                     </div>
                     <form id="findForm">
-                        <div class="mb-3"><label for="findEmployeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label><input type="text" class="form-control" id="findEmployeeId" required></div>
+                        <div class="mb-3">
+                            <label for="findEmployeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card fa-fw"></i></span>
+                                <input type="text" class="form-control" id="findEmployeeId" required>
+                            </div>
+                        </div>
                         <div class="d-grid"><button type="submit" class="btn btn-primary btn-lg" data-key="search_button">ค้นหา</button></div>
                     </form>
                     <div class="text-center mt-3"><a href="#" id="showRegisterFormLink" data-key="back_to_register_link" class="d-none">กลับไปหน้าลงทะเบียน</a></div>
@@ -155,12 +188,17 @@
                 </div>
 
                 <div id="sportday-section" class="d-none">
-                    <h1 class="h3 mb-3 fw-bold text-center" data-key="sportday_title">ลงทะเบียนกีฬาสี</h1>
-                    <p class="text-muted text-center mb-4" data-key="sportday_subtitle">กรอกรหัสพนักงานเพื่อยืนยันการเข้าร่วม</p>
-                    <form id="sportdayForm">
+                    <div class="border-bottom pb-3">
+                        <h1 class="h3 mb-3 fw-bold text-center" data-key="sportday_title">ลงทะเบียนกีฬาสี</h1>
+                        <p class="text-muted text-center mb-4" data-key="sportday_subtitle">กรอกรหัสพนักงานเพื่อยืนยันการเข้าร่วม</p>
+                    </div>
+                    <form id="sportdayForm" class="mt-4">
                         <div class="mb-3">
                             <label for="sportdayEmployeeId" class="form-label" data-key="form_employee_id">รหัสพนักงาน</label>
-                            <input type="text" class="form-control" id="sportdayEmployeeId" required>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card fa-fw"></i></span>
+                                <input type="text" class="form-control" id="sportdayEmployeeId" required>
+                            </div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg" data-key="sportday_register_button">ยืนยันเข้าร่วม</button>
@@ -180,6 +218,7 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center"><h1 class="h3 mb-0 fw-bold" data-key="employee_list_title">รายชื่อผู้ลงทะเบียน</h1><span id="employee-count-badge" class="badge bg-secondary rounded-pill"></span></div>
                     <div class="input-group my-3">
+                        <span class="input-group-text"><i class="fa-solid fa-search fa-fw"></i></span>
                         <input type="text" id="employeeSearchInput" class="form-control" placeholder="ค้นหาด้วยชื่อ, นามสกุล, รหัสพนักงาน, หรือฝ่าย...">
                     </div>
                     <div id="employeeTableContainer" class="table-responsive mt-3"></div>
@@ -187,7 +226,7 @@
                 <div id="draw-section" class="d-none text-center">
                     <div class="d-grid mb-3"><button type="button" id="backFromDrawBtn" class="btn btn-secondary" data-key="back_to_main_button">กลับไปหน้าหลัก</button></div>
                     <div id="draw-setup">
-                        <h1 class="h3 mb-3 fw-bold" data-key="draw_title">จับรางวัลผู้โชคดี</h1>
+                        <h1 class="h3 mb-3 fw-bold border-bottom pb-3" data-key="draw_title">จับรางวัลผู้โชคดี</h1>
                         <div class="row mb-3">
                             
                         </div>
@@ -211,7 +250,6 @@
                             <p id="slot-name" class="display-6 fw-bold text-warning" data-key="slot_name_placeholder">ชื่อ-นามสกุล</p>
                             <p id="slot-id" class="text-light" data-key="slot_id_placeholder">รหัสพนักงาน</p>
                         </div>
-                        <!---->
                         <div id="draw-controls" class="gap-2">
                             <div class="row g-2 mb-3">
                                 <div class="col">
@@ -233,18 +271,32 @@
                 </div>
                 <div id="checkin-section" class="d-none">
                     <div class="d-grid mb-3"><button type="button" id="backFromCheckinBtn" class="btn btn-secondary" data-key="back_to_main_button">กลับไปหน้าหลัก</button></div>
-                    <h1 class="h3 mb-3 fw-bold" data-key="checkin_title">ตรวจสอบผู้เข้าร่วมงาน</h1>
-                    <form id="checkinForm"><div class="mb-3"><label for="checkinEmployeeId" class="form-label" data-key="checkin_form_label">กรอกรหัสพนักงาน</label><input type="text" class="form-control" id="checkinEmployeeId" required></div><div class="d-grid"><button type="submit" class="btn btn-primary" data-key="checkin_form_button">ตรวจสอบ</button></div></form>
+                    <h1 class="h3 mb-3 fw-bold border-bottom pb-3" data-key="checkin_title">ตรวจสอบผู้เข้าร่วมงาน</h1>
+                    <form id="checkinForm">
+                        <div class="mb-3">
+                            <label for="checkinEmployeeId" class="form-label" data-key="checkin_form_label">กรอกรหัสพนักงาน</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card fa-fw"></i></span>
+                                <input type="text" class="form-control" id="checkinEmployeeId" required>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" data-key="checkin_form_button">ตรวจสอบ</button>
+                        </div>
+                    </form>
                     <div id="checkinResultContainer" class="d-none mt-4"></div>
                 </div>
                 <div id="vote-section" class="d-none">
                     <div class="d-grid mb-3"><button type="button" id="backFromVoteBtn" class="btn btn-secondary" data-key="back_to_main_button">กลับไปหน้าหลัก</button></div>
-                    <h1 class="h3 mb-3 fw-bold" data-key="vote_title">โหวตการประกวด</h1>
+                    <h1 class="h3 mb-3 fw-bold border-bottom pb-3" data-key="vote_title">โหวตการประกวด</h1>
                     <div id="vote-eligibility-check">
                         <p class="text-muted">กรุณากรอกรหัสพนักงานเพื่อตรวจสอบสิทธิ์การโหวต (ต้องเช็คอินแล้ว)</p>
                         <div class="mb-3">
                             <label for="voteEmployeeId" class="form-label" data-key="vote_form_id">รหัสพนักงานของคุณ</label>
-                            <input type="text" class="form-control" id="voteEmployeeId" required>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card fa-fw"></i></span>
+                                <input type="text" class="form-control" id="voteEmployeeId" required>
+                            </div>
                         </div>
                          <div id="voteEligibilityMessage" class="mb-3 text-danger"></div>
                         <div class="d-grid">
@@ -281,7 +333,7 @@
                     <div class="d-grid mb-3">
                         <button type="button" id="backFromRealtimeBtn" class="btn btn-secondary" data-key="back_to_main_button">กลับไปหน้าหลัก</button>
                     </div>
-                    <h1 class="h3 mb-3 fw-bold text-center">ผลโหวต Real-time (<span id="totalVotes">0</span> คะแนน)</h1>
+                    <h1 class="h3 mb-3 fw-bold text-center border-bottom pb-3">ผลโหวต Real-time (<span id="totalVotes">0</span> คะแนน)</h1>
                     <div id="realtime-candidates-container">
                     </div>
                 </div>
