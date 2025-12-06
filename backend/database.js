@@ -1,27 +1,25 @@
 const { Pool } = require('pg');
-require('dotenv').config(); // โหลดค่าจาก .env
+require('dotenv').config(); 
 
-// ตั้งค่าการเชื่อมต่อ (ดึงจาก Environment Variables)
+// --- FIXED: จำกัด Connection Pool เพื่อไม่ให้ Supabase Free Plan ล่ม ---
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT || 5432,
-    ssl: {
-        rejectUnauthorized: false // <--- ต้องมีบรรทัดนี้สำหรับ Supabase !!!
-    }
+    ssl: { rejectUnauthorized: false },
+    max: 5, // <--- สำคัญมาก: จำกัดแค่ 5 connection เพื่อแบ่งกันใช้และไม่ชน Limit
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
 });
 
-console.log('Connecting to Google Cloud SQL (PostgreSQL)...');
+console.log('Connecting to PostgreSQL (Supabase)...');
 
-// ฟังก์ชันสำหรับสร้างตาราง (Schema Migration)
 const initDb = async () => {
     const client = await pool.connect();
     try {
         // 1. Employees Table
-        // SQLite: INTEGER PRIMARY KEY AUTOINCREMENT -> Postgres: SERIAL PRIMARY KEY
-        // SQLite: strftime -> Postgres: ใช้ CURRENT_TIMESTAMP หรือจัดการฝั่ง Node
         await client.query(`
             CREATE TABLE IF NOT EXISTS employees (
                 id SERIAL PRIMARY KEY,
@@ -42,17 +40,22 @@ const initDb = async () => {
             CREATE TABLE IF NOT EXISTS candidates (
                 id SERIAL PRIMARY KEY,
                 name TEXT NOT NULL,
-                department TEXT,
-                votes INTEGER DEFAULT 0
+                department TEXT
             );
         `);
 
-        // 3. Votes Table
+        // 3. Votes Table (--- FIXED: เพิ่ม candidate_id ---)
         await client.query(`
             CREATE TABLE IF NOT EXISTS votes (
-                employee_id TEXT PRIMARY KEY
+                employee_id TEXT PRIMARY KEY,
+                candidate_id INTEGER REFERENCES candidates(id)
             );
         `);
+        
+        // Safety check: เพิ่ม column candidate_id ถ้าตารางเดิมไม่มี
+        try {
+            await client.query(`ALTER TABLE votes ADD COLUMN IF NOT EXISTS candidate_id INTEGER REFERENCES candidates(id)`);
+        } catch (e) { /* ignore */ }
 
         // 4. Prizes Table
         await client.query(`
@@ -71,14 +74,13 @@ const initDb = async () => {
             );
         `);
 
-        // Ensure default vote status row
         await client.query(`
             INSERT INTO vote_status (id, is_open, deadline) 
             VALUES (1, FALSE, NULL) 
             ON CONFLICT (id) DO NOTHING;
         `);
 
-        // Initial Data Checks (ตรวจสอบและเพิ่มข้อมูลเริ่มต้น)
+        // Initial Data Seeding
         const candRes = await client.query("SELECT COUNT(*) FROM candidates");
         if (parseInt(candRes.rows[0].count) === 0) {
             console.log("Seeding candidates...");
@@ -93,7 +95,6 @@ const initDb = async () => {
                 "รางวัลที่ 5: บัตรกำนัล 2,000 บาท", "รางวัลที่ 4: พัดลมไอน้ำ",
                 "รางวัลที่ 3: Smart TV 55 นิ้ว", "รางวัลที่ 2: ทองคำ 1 บาท", "รางวัลที่ 1: iPhone 16"
             ];
-            // Loop insert หรือใช้ Bulk insert ก็ได้
             for (const p of prizes) {
                 await client.query("INSERT INTO prizes (name) VALUES ($1)", [p]);
             }
