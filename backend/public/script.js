@@ -1132,7 +1132,16 @@ async function exportToExcel() {
         if (exportEmployees) {
             const d = results[i++].data;
             if (d) {
-                const sheet = XLSX.utils.json_to_sheet(d.map(e=>({'รหัส':e.employee_id, 'ชื่อ':e.first_name, 'สกุล':e.last_name, 'ฝ่าย':e.department})));
+                const sheet = XLSX.utils.json_to_sheet(d.map(e=>({
+                    'รหัส':e.employee_id, 
+                    'ชื่อ':e.first_name, 
+                    'สกุล':e.last_name, 
+                    'ฝ่าย':e.department,
+                    'สถานะ (Group)': e.status || '-',
+                    'ยืนยันลงทะเบียน': e.registration_time ? '✔️ ลงแล้ว' : '❌',
+                    'สถานะเช็คอิน': e.checked_in ? '✔️ มาแล้ว' : '❌',
+                    'Sport Day Status': e.sport_day_registered ? '✔️ ลงแล้ว' : '❌'
+                })));
                 XLSX.utils.book_append_sheet(wb, sheet, "Employees");
             }
         }
