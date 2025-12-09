@@ -547,7 +547,7 @@ function renderEmployeeTable(dataToRender) {
         <td>${emp.department || '-'}</td>
         <td>${emp.employee_id}</td>
         <td>${emp.registration_time ? `✔️ <small>${new Date(emp.registration_time).toLocaleString('th-TH')}</small>` : '❌'}</td>
-        <td>${emp.checked_in ? `✔️ <small>${new Date(emp.checkin_time).toLocaleTimeString('th-TH')}</small>` : '❌'}</td>
+        <td>${emp.checked_in ? `✔️ <small>${new Date(emp.checkin_time).toLocaleString('th-TH')}</small>` : '❌'}</td>
         <td>${emp.sport_day_registered ? `✔️ <small>${new Date(emp.sport_day_reg_time).toLocaleString('th-TH')}</small>` : '❌'}</td>
         <td><button class="btn btn-danger btn-sm delete-btn" data-id="${emp.id}" data-key="delete_button">ลบ</button></td>
         </tr>`).join('');
@@ -1137,7 +1137,6 @@ async function exportToExcel() {
                     'ชื่อ':e.first_name, 
                     'สกุล':e.last_name, 
                     'ฝ่าย':e.department,
-                    'สถานะ (Group)': e.status || '-',
                     'ยืนยันลงทะเบียน': e.registration_time ? '✔️ ลงแล้ว' : '❌',
                     'สถานะเช็คอิน': e.checked_in ? '✔️ มาแล้ว' : '❌',
                     'Sport Day Status': e.sport_day_registered ? '✔️ ลงแล้ว' : '❌'
