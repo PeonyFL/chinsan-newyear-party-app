@@ -467,15 +467,19 @@ adminPasswordForm.addEventListener('submit', (e) => {
 });
 
 // --- Main Application Logic ---
+// ในไฟล์ script.js
+
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!confirm("ยืนยันการเพิ่มพนักงาน?")) return;
+    
     const employeeData = {
         firstName: document.getElementById('firstName').value,
         lastName: document.getElementById('lastName').value,
         department: document.getElementById('department').value,
         employeeId: document.getElementById('employeeId').value.toUpperCase()
     };
+    
     try {
         const res = await fetch(`${API_BASE_URL}/add-employee`, {
             method: 'POST',
@@ -483,9 +487,19 @@ registrationForm.addEventListener('submit', async (e) => {
             body: JSON.stringify(employeeData)
         });
         const result = await res.json();
+        
         if (res.ok) {
             displaySuccess(result.message);
             registrationForm.reset();
+        } else if (res.status === 409) {
+            // --- แก้ไขตรงนี้: แจ้งเตือนข้อความอย่างเดียว ---
+            // ใช้ displayError (แถบสีแดง) หรือ alert (หน้าต่างเด้ง) ก็ได้ครับ
+            
+            // แบบที่ 1: ใช้แถบแจ้งเตือนของระบบ (Toast)
+            displayError("รหัสพนักงานนี้ ลงทะเบียนไปแล้ว"); 
+
+            // แบบที่ 2: ถ้าอยากให้เด้งเป็น Popup กลางจอให้ใช้บรรทัดล่างนี้แทน
+            // alert("รหัสพนักงานนี้ ลงทะเบียนไปแล้ว");
         } else {
             displayError(result.error);
         }
@@ -493,6 +507,7 @@ registrationForm.addEventListener('submit', async (e) => {
         displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
     }
 });
+
 findForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('findEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } });
 checkinForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('checkinEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const response = await fetch(`${API_BASE_URL}/checkin`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ employeeId }) }); const result = await response.json(); const container = document.getElementById('checkinResultContainer'); container.classList.remove('d-none'); if (response.ok) { container.innerHTML = `<div class="alert alert-success d-flex align-items-center"><div class="status-icon me-3">✔️</div><div><h4 class="alert-heading">เช็คอินสำเร็จ</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.firstName} ${result.data.lastName}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>รหัสพนักงาน:</strong> ${result.data.employeeId}</p></div></div>`; } else if (response.status === 409) { const checkinTime = new Date(result.data.checkin_time).toLocaleString('th-TH'); container.innerHTML = `<div class="alert alert-warning d-flex align-items-center"><div class="status-icon me-3">⚠️</div><div><h4 class="alert-heading">เช็คอินไปแล้ว</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.firstName} ${result.data.lastName}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>เวลาที่เช็คอิน:</strong> ${checkinTime}</p></div></div>`; } else { container.innerHTML = `<div class="alert alert-danger d-flex align-items-center"><div class="status-icon me-3">❌</div><div><h4 class="alert-heading">ไม่พบข้อมูล</h4><p class="mb-0">กรุณาตรวจสอบรหัสพนักงานอีกครั้ง</p></div></div>`; } } catch (error) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } checkinForm.reset(); });
 
