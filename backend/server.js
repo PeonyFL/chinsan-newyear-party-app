@@ -65,6 +65,8 @@ app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors,
 
 // --- ไฟล์ server.js ---
 
+// --- ไฟล์ server.js (แก้ไข endpoint /add-employee) ---
+
 app.post('/add-employee', async (req, res) => {
     const { firstName, lastName, department, employeeId, isAdmin } = req.body;
     const eid = String(employeeId).toUpperCase();
@@ -73,6 +75,7 @@ app.post('/add-employee', async (req, res) => {
     try {
         await client.query('BEGIN');
 
+        // ตรวจสอบว่ามีรหัสนี้ในระบบไหม
         const checkRes = await client.query("SELECT * FROM employees WHERE employee_id = $1", [eid]);
         const existingUser = checkRes.rows[0];
 
@@ -80,7 +83,8 @@ app.post('/add-employee', async (req, res) => {
             // --- กรณีมีชื่อในระบบแล้ว ---
 
             if (existingUser.registration_time) {
-                // ✅ แก้ไขตรงนี้: กลับมาส่ง Error 409 พร้อมแนบเวลา (registeredAt)
+                // ✅ จุดที่ต้องแก้: ต้องส่ง status 409 (Conflict) เพื่อบอกว่าซ้ำ
+                // ห้ามส่ง 200 เด็ดขาด ไม่งั้นหน้าเว็บจะนึกว่าสำเร็จและโชว์ QR
                 await client.query('ROLLBACK');
                 return res.status(409).json({ 
                     "error": "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว",
@@ -88,14 +92,14 @@ app.post('/add-employee', async (req, res) => {
                 });
             } 
             
-            // ... (ส่วนอัปเดตข้อมูล กรณีลงทะเบียนครั้งแรกจาก Excel) ...
+            // ถ้ายังไม่ลงทะเบียน (มีแต่ชื่อจาก Excel) -> อัปเดตข้อมูล
             await client.query(
                 "UPDATE employees SET first_name=$1, last_name=$2, department=$3, registration_time=NOW() WHERE employee_id=$4",
                 [firstName, lastName, department, eid]
             );
 
         } else {
-            // ... (ส่วน Insert ใหม่) ...
+            // --- กรณีไม่มีชื่อในระบบ (รหัสใหม่) ---
             if (isAdmin) {
                 await client.query(
                     "INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES ($1, $2, $3, $4, NOW())",
@@ -107,6 +111,7 @@ app.post('/add-employee', async (req, res) => {
             }
         }
 
+        // กรณีสำเร็จ (Insert หรือ Update ครั้งแรก) -> สร้าง QR
         const qr = await qrcode.toDataURL(eid, { width: 350, margin: 1 });
         await client.query('COMMIT');
 

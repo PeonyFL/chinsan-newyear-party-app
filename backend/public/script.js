@@ -470,6 +470,8 @@ adminPasswordForm.addEventListener('submit', (e) => {
 
 // --- ไฟล์ script.js ---
 
+// --- ไฟล์ script.js ---
+
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -490,7 +492,7 @@ registrationForm.addEventListener('submit', async (e) => {
         const result = await res.json();
         
         if (res.ok) {
-            // กรณีลงทะเบียนสำเร็จครั้งแรก
+            // ถ้าสำเร็จ (Status 200) -> ไปหน้า QR Code
             navigateTo(resultDiv);
             document.getElementById('resultMessage').innerText = result.message;
             document.getElementById('qrCodeContainer').innerHTML = `
@@ -498,24 +500,19 @@ registrationForm.addEventListener('submit', async (e) => {
             `;
             registrationForm.reset();
         } else if (res.status === 409) {
-            // ✅ แก้ไขตรงนี้: แสดงข้อความแจ้งเตือน + วันที่
+            // ✅ ถ้าซ้ำ (Status 409) -> แสดง Error สีแดง + วันที่ (ไม่ไปหน้า QR)
             let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
-            
             if (result.registeredAt) {
                 const dateObj = new Date(result.registeredAt);
-                // แปลงเป็นรูปแบบไทย เช่น: 10 ธันวาคม 2568 เวลา 10:30
                 const dateStr = dateObj.toLocaleString('th-TH', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                    year: 'numeric', month: 'long', day: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
                 });
                 msg += `\n(เมื่อ: ${dateStr})`;
             }
-            
-            displayError(msg); // แสดงแถบสีแดงแจ้งเตือน
+            displayError(msg); 
         } else {
+            // กรณี Error อื่นๆ
             displayError(result.error);
         }
     } catch (err) {
