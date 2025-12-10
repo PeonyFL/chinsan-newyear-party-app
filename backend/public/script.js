@@ -460,8 +460,6 @@ async function showEmployeeView() {
 
     if (window.location.hash === '#vote') {
         await showVotePage();
-    } else if (window.location.hash === '#newyear') {
-        navigateTo(findSection);
     } else {
         // Ensure inputs are hidden for normal user
         document.getElementById('additional-info-fields').classList.add('d-none');
