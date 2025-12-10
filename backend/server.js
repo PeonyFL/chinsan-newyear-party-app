@@ -59,43 +59,80 @@ app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors,
     }
 });
 
+// --- ไฟล์ server.js ---
+
 app.post('/add-employee', async (req, res) => {
-    const { firstName, lastName, department, employeeId } = req.body;
+    // รับค่า isAdmin มาด้วย
+    const { firstName, lastName, department, employeeId, isAdmin } = req.body;
+    const eid = String(employeeId).toUpperCase();
+    
+    const client = await db.connect();
     try {
-        const sql = `INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES ($1, $2, $3, $4, NOW()) ON CONFLICT (employee_id) DO NOTHING`;
-        const result = await db.query(sql, [firstName, lastName, department, String(employeeId).toUpperCase()]);
-        if (result.rowCount === 0) return res.status(409).json({ "error": "มีรหัสพนักงานนี้แล้ว" });
-        res.status(201).json({ "message": "เพิ่มข้อมูลสำเร็จ" });
-    } catch (err) { res.status(500).json({ "error": err.message }); }
+        await client.query('BEGIN');
+
+        // 1. เช็คว่ามีรหัสนี้ในระบบไหม
+        const checkRes = await client.query("SELECT * FROM employees WHERE employee_id = $1", [eid]);
+        const existingUser = checkRes.rows[0];
+
+        if (existingUser) {
+            // --- กรณีมีชื่อในระบบแล้ว ---
+            
+            if (existingUser.registration_time) {
+                // ถ้าลงทะเบียนไปแล้ว -> แจ้งเตือน
+                await client.query('ROLLBACK');
+                return res.status(409).json({ "error": "รหัสพนักงานนี้ ลงทะเบียนเรียบร้อยแล้ว" });
+            } 
+            
+            // ถ้ายังไม่ลงทะเบียน (มีแต่ชื่อจาก Excel) -> อัปเดตข้อมูลและเวลาลงทะเบียน
+            await client.query(
+                "UPDATE employees SET first_name=$1, last_name=$2, department=$3, registration_time=NOW() WHERE employee_id=$4",
+                [firstName, lastName, department, eid]
+            );
+
+        } else {
+            // --- กรณีไม่มีชื่อในระบบ (รหัสใหม่) ---
+
+            if (isAdmin) {
+                // ✅ ถ้าเป็น Admin: อนุญาตให้เพิ่มพนักงานใหม่ได้
+                await client.query(
+                    "INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES ($1, $2, $3, $4, NOW())",
+                    [firstName, lastName, department, eid]
+                );
+            } else {
+                // ❌ ถ้าเป็น User ทั่วไป: ห้ามเพิ่มเอง ต้องมีใน Excel ก่อน
+                await client.query('ROLLBACK');
+                return res.status(404).json({ "error": "ไม่พบข้อมูลในระบบ (กรุณาติดต่อ Admin เพื่อเพิ่มรายชื่อ)" });
+            }
+        }
+
+        // สร้าง QR Code ส่งกลับไป (ทั้งกรณี Update และ Insert ของ Admin)
+        const qr = await qrcode.toDataURL(eid, { width: 350, margin: 1 });
+        await client.query('COMMIT');
+
+        res.status(200).json({ 
+            "message": "ลงทะเบียนสำเร็จ", 
+            "data": { qrCode: qr, employeeId: eid } 
+        });
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ "error": err.message });
+    } finally {
+        client.release();
+    }
 });
 
-// ไฟล์: server.js
-
+// ส่วน Find QR คงเดิมไว้ (ตามที่คุยกันรอบที่แล้ว)
 app.get('/find/:employeeId', async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM employees WHERE employee_id = $1", [req.params.employeeId.toUpperCase()]);
         const row = result.rows[0];
         
-        if (row) {
-            // --- ส่วนที่เพิ่มใหม่ เริ่มต้น ---
-            // ถ้ามี registration_time แล้ว (แปลว่าเคยลงทะเบียนรับ QR ไปแล้ว)
-            if (row.registration_time) {
-                return res.status(409).json({ 
-                    "error": "ท่านได้ลงทะเบียนไปแล้ว" 
-                });
-            }
-            // --- ส่วนที่เพิ่มใหม่ สิ้นสุด ---
-
-            // ถ้ายังไม่เคยลง (registration_time เป็น null) ให้บันทึกเวลาและสร้าง QR
-            await db.query("UPDATE employees SET registration_time = NOW() WHERE employee_id = $1", [row.employee_id]);
-            
+        if (row && row.registration_time) {
             const qr = await qrcode.toDataURL(row.employee_id, { width: 350, margin: 1 });
-            res.status(200).json({
-                "message": "พบข้อมูลแล้ว",
-                "data": { ...row, "qrCode": qr }
-            });
+            res.status(200).json({ "message": "พบข้อมูล QR Code", "data": { ...row, "qrCode": qr } });
         } else {
-            res.status(404).json({ "error": "ไม่พบรหัสพนักงานนี้" });
+            res.status(404).json({ "error": "ไม่พบข้อมูล (หรือยังไม่ได้ลงทะเบียน)" });
         }
     } catch (err) { res.status(500).json({ "error": err.message }); }
 });
