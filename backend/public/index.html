@@ -36,6 +36,9 @@
                     <button id="select-sportday-btn" class="btn btn-success btn-lg" data-key="sportday_button">
                         <i class="fa-solid fa-person-running me-2"></i>ลงทะเบียนกีฬาสี
                     </button>
+                    <button id="check-my-status-btn" class="btn btn-info btn-lg text-white">
+                        <i class="fa-solid fa-clipboard-check me-2"></i>เช็คสถานะการลงทะเบียน
+                    </button>
                     <button id="select-admin-btn" class="btn btn-secondary btn-lg">
                         <i class="fa-solid fa-user-shield me-2"></i>Admin
                     </button>
@@ -582,6 +585,56 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                         data-key="close_button">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="employeeStatusModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">ตรวจสอบสถานะรายบุคคล</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="checkMyStatusForm">
+                        <div class="mb-3">
+                            <label class="form-label" data-key="form_employee_id">รหัสพนักงาน</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card fa-fw"></i></span>
+                                <input type="text" class="form-control" id="myStatusEmployeeId" required>
+                                <button type="submit" class="btn btn-primary" data-key="search_button">ตรวจสอบ</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="my-status-loading" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="my-status-result" class="d-none mt-3">
+                        <h5 id="my-status-name" class="fw-bold text-center mb-3"></h5>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                ลงทะเบียนงานปีใหม่
+                                <span id="my-status-newyear"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                ลงทะเบียนกีฬาสี
+                                <span id="my-status-sportday"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                เช็คอินเข้างาน
+                                <span id="my-status-checkin"></span>
+                            </li>
+                            <li
+                                class="list-group-item d-flex justify-content-between align-items-center bg-light fw-bold">
+                                สิทธิ์ลุ้นรางวัล
+                                <span id="my-status-prize"></span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

@@ -13,6 +13,7 @@ router.post('/add-employee', controller.addEmployee); // Logic includes Login
 router.get('/find/:employeeId', controller.findEmployee);
 router.get('/employees', controller.getAllEmployees);
 router.get('/employees/status-summary', controller.getStatusSummary);
+router.get('/employee-status/:employeeId', controller.getEmployeeStatus);
 router.post('/checkin', controller.checkin);
 router.post('/sportday-register', controller.sportdayRegister);
 router.delete('/employees/all', controller.deleteAllEmployees);

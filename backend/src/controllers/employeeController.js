@@ -141,6 +141,27 @@ exports.getStatusSummary = async (req, res) => {
     } catch (err) { res.status(500).json({ "error": err.message }); }
 };
 
+exports.getEmployeeStatus = async (req, res) => {
+    try {
+        const id = req.params.employeeId.toUpperCase();
+        const result = await pool.query("SELECT * FROM employees WHERE employee_id = $1", [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "ไม่พบข้อมูลพนักงานในระบบ" });
+        }
+
+        const emp = result.rows[0];
+        const status = {
+            registered_new_year: !!emp.registration_time,
+            registered_sport_day: !!emp.sport_day_registered,
+            checked_in: !!emp.checked_in,
+            eligible_for_prize: !!(emp.registration_time && emp.sport_day_registered && emp.checked_in)
+        };
+
+        res.status(200).json({ data: status, employee: { first_name: emp.first_name, last_name: emp.last_name } });
+    } catch (err) { res.status(500).json({ "error": err.message }); }
+};
+
 exports.checkin = async (req, res) => {
     const eid = req.body.employeeId?.toUpperCase();
     if (!eid) return res.status(400).json({ error: "No ID" });

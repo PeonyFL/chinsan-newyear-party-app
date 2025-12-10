@@ -243,6 +243,57 @@ document.getElementById('showFindQrPageBtn').addEventListener('click', () => {
     navigateTo(findSection);
 });
 
+// --- Employee Status Check Logic ---
+const employeeStatusModal = new bootstrap.Modal(document.getElementById('employeeStatusModal'));
+document.getElementById('check-my-status-btn').addEventListener('click', () => {
+    document.getElementById('checkMyStatusForm').reset();
+    document.getElementById('my-status-result').classList.add('d-none');
+    employeeStatusModal.show();
+});
+
+document.getElementById('checkMyStatusForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const empId = document.getElementById('myStatusEmployeeId').value.trim();
+    if (!empId) return;
+
+    const loading = document.getElementById('my-status-loading');
+    const resultDiv = document.getElementById('my-status-result');
+    loading.classList.remove('d-none');
+    resultDiv.classList.add('d-none');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/employee-status/${empId}`);
+        const result = await res.json();
+
+        if (!res.ok) throw new Error(result.error || "ไม่พบข้อมูล");
+
+        const { data, employee } = result;
+        document.getElementById('my-status-name').innerText = `${employee.first_name} ${employee.last_name}`;
+
+        const setStatus = (id, valid) => {
+            const el = document.getElementById(id);
+            el.innerHTML = valid
+                ? '<span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i> เรียบร้อย</span>'
+                : '<span class="badge bg-secondary rounded-pill"><i class="fa-solid fa-times"></i> ยังไม่ทำ</span>';
+        };
+
+        setStatus('my-status-newyear', data.registered_new_year);
+        setStatus('my-status-sportday', data.registered_sport_day);
+        setStatus('my-status-checkin', data.checked_in);
+
+        const prizeEl = document.getElementById('my-status-prize');
+        prizeEl.innerHTML = data.eligible_for_prize
+            ? '<span class="badge bg-success rounded-pill">🎉 มีสิทธิ์ลุ้นรางวัล</span>'
+            : '<span class="badge bg-danger rounded-pill">❌ ยังไม่มีสิทธิ์</span>';
+
+        resultDiv.classList.remove('d-none');
+    } catch (err) {
+        displayError(err.message);
+    } finally {
+        loading.classList.add('d-none');
+    }
+});
+
 // Status Check Modal Logic
 statusCheckModalEl.addEventListener('show.bs.modal', async () => {
     statusCheckLoading.classList.remove('d-none');
