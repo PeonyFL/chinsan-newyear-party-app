@@ -250,6 +250,11 @@ document.getElementById('check-my-status-btn').addEventListener('click', () => {
     document.getElementById('my-status-result').classList.add('d-none');
     employeeStatusModal.show();
 });
+document.getElementById('check-status-btn-employee').addEventListener('click', () => {
+    document.getElementById('checkMyStatusForm').reset();
+    document.getElementById('my-status-result').classList.add('d-none');
+    employeeStatusModal.show();
+});
 
 document.getElementById('checkMyStatusForm').addEventListener('submit', async (e) => {
     e.preventDefault();
