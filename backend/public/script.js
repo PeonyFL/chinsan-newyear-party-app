@@ -468,7 +468,6 @@ adminPasswordForm.addEventListener('submit', (e) => {
 
 // --- Main Application Logic ---
 
-// 1. แก้ไข registrationForm ให้แสดงวันที่เมื่อ Error 409
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -496,12 +495,15 @@ registrationForm.addEventListener('submit', async (e) => {
             `;
             registrationForm.reset();
         } else if (res.status === 409) {
-            // ✅ แก้ไข: แสดงวันที่ลงทะเบียน (แปลงเป็นรูปแบบไทย)
-            let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
+            // ✅ Requirement 1: แสดงวันที่ลงทะเบียน (ถ้ามี)
+            let msg = "ท่านลงทะเบียนเรียบร้อยแล้ว";
             if (result.registeredAt) {
                 const dateObj = new Date(result.registeredAt);
-                const dateStr = dateObj.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
-                msg += `\n(เมื่อวันที่: ${dateStr})`;
+                const dateStr = dateObj.toLocaleString('th-TH', { 
+                    year: 'numeric', month: 'long', day: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+                msg += `\n(เมื่อ: ${dateStr})`;
             }
             displayError(msg); 
         } else {
@@ -512,8 +514,31 @@ registrationForm.addEventListener('submit', async (e) => {
     }
 });
 
-// 2. ตรวจสอบว่า Event Listener สำหรับลิงก์ค้นหาทำงานถูกต้อง (ปกติมีอยู่แล้ว แต่เช็คเพื่อความชัวร์)
-// ปุ่มนี้จะอยู่ในหน้า Registration เพื่อให้กดข้ามไปหน้า Find ได้
+// 2. ส่วนจัดการปุ่ม "ค้นหา QR" (Requirement 2)
+// ปุ่มนี้อยู่ในหน้า Employee กดแล้วให้ไปหน้าค้นหา
+document.getElementById('showFindFormLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('backFromFindBtn').classList.remove('d-none'); // โชว์ปุ่มย้อนกลับ
+    // เปลี่ยนข้อความปุ่มย้อนกลับให้ชัดเจนว่ากลับไปหน้าลงทะเบียน
+    document.getElementById('backFromFindBtn').innerText = "กลับไปหน้าลงทะเบียน";
+    navigateTo(findSection); 
+});
+
+// จัดการปุ่ม "ย้อนกลับ" ในหน้าค้นหา
+document.getElementById('backFromFindBtn').addEventListener('click', () => {
+    if (isAdminLoggedIn) {
+        // ถ้าเป็น Admin ให้กลับไปหน้า Admin Menu (logic เดิม)
+        registrationForm.classList.add('d-none'); // ซ่อนฟอร์มลงทะเบียน
+        adminActionsContainer.classList.remove('d-none'); // โชว์เมนู Admin
+        navigateTo(registrationSection); 
+    } else {
+        // ✅ ถ้าเป็น Employee ทั่วไป ให้กลับไปหน้าฟอร์มลงทะเบียน
+        registrationForm.classList.remove('d-none');
+        adminActionsContainer.classList.add('d-none');
+        navigateTo(registrationSection);
+    }
+});
+
 document.getElementById('showFindFormLink').addEventListener('click', (e) => { 
     e.preventDefault(); 
     // กดแล้วให้ไปหน้า Find Section

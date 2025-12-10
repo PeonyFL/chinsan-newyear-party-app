@@ -75,23 +75,25 @@ app.post('/add-employee', async (req, res) => {
         const existingUser = checkRes.rows[0];
 
         if (existingUser) {
+            // --- กรณีมีชื่อในระบบแล้ว ---
+
             if (existingUser.registration_time) {
-                // ✅ แก้ไขจุดที่ 1: ส่งวันที่ (registeredAt) กลับไปพร้อมกับ Error 409
+                // ✅ Requirement 1: ถ้าลงทะเบียนแล้ว ให้ส่ง Error 409 พร้อมวันที่
                 await client.query('ROLLBACK');
                 return res.status(409).json({ 
                     "error": "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว",
-                    "registeredAt": existingUser.registration_time 
+                    "registeredAt": existingUser.registration_time // ส่งเวลาไปด้วย
                 });
             } 
             
-            // ... (ส่วน Update กรณี User ลงทะเบียนครั้งแรก หรือ Admin แก้ไข) ...
+            // ถ้ายังไม่ลงทะเบียน -> อัปเดตข้อมูล
             await client.query(
                 "UPDATE employees SET first_name=$1, last_name=$2, department=$3, registration_time=NOW() WHERE employee_id=$4",
                 [firstName, lastName, department, eid]
             );
 
         } else {
-            // ... (ส่วน Insert ใหม่) ...
+            // --- กรณีไม่มีชื่อในระบบ ---
             if (isAdmin) {
                 await client.query(
                     "INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES ($1, $2, $3, $4, NOW())",
@@ -110,6 +112,7 @@ app.post('/add-employee', async (req, res) => {
             "message": "ลงทะเบียนสำเร็จ", 
             "data": { qrCode: qr, employeeId: eid } 
         });
+
     } catch (err) {
         await client.query('ROLLBACK');
         res.status(500).json({ "error": err.message });

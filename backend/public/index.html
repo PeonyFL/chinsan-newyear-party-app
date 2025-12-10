@@ -43,6 +43,7 @@
                     <h1 class="h3 mb-3 fw-bold text-center" data-key="main_title">Chinsan New Year Party 2026</h1>
                     <p class="text-muted text-center mb-4" data-key="main_subtitle">กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน</p>
                 </div>
+                
                 <div id="registration-section" class="d-none">
                     <form id="registrationForm">
                         
@@ -75,11 +76,19 @@
                             </div>
                         </div>
 
-                        <div class="d-grid"><button type="submit" class="btn btn-primary btn-lg" data-key="register_button">ลงทะเบียน</button></div>
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg" data-key="register_button">ลงทะเบียน</button>
+                        </div>
+                        
+                        <div class="d-grid gap-2 text-center">
+                            <button type="button" id="showFindFormLink" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-solid fa-qrcode me-2"></i> ลืม QR Code? / ค้นหา QR Code
+                            </button>
+                        </div>
+
                     </form>
-                    <div class="text-center mt-3"><a href="#" id="showFindFormLink" data-key="forgot_qr_link">ลืม QR Code? / ค้นหา QR Code</a></div>
                     
-                    <div id="admin-actions-container" class="mt-4 pt-4 border-top">
+                    <div id="admin-actions-container" class="mt-4 pt-4 border-top d-none">
                         <div class="row g-3">
                             <div class="col-12 d-grid">
                                 <button type="button" id="showAddEmployeeFormBtn" class="btn btn-primary" data-key="add_employee_button">
@@ -157,12 +166,12 @@
                                 </form>
                             </div>
                         </div>
-                        </div>
+                    </div>
                 </div>
 
                 <div id="find-section" class="d-none">
                     <div class="d-grid mb-3">
-                        <button type="button" id="backFromFindBtn" class="btn btn-secondary" data-key="back_to_admin_menu">กลับไปหน้า Admin</button>
+                        <button type="button" id="backFromFindBtn" class="btn btn-secondary" data-key="back_to_register_link">กลับไปหน้าลงทะเบียน</button>
                     </div>
                     <form id="findForm">
                         <div class="mb-3">
