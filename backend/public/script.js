@@ -530,25 +530,28 @@ registrationForm.addEventListener('submit', async (e) => {
     }
 });
 
-// 2. ส่วนจัดการปุ่ม "ค้นหา QR" (Requirement 2)
-// ปุ่มนี้อยู่ในหน้า Employee กดแล้วให้ไปหน้าค้นหา
+/// 1. จัดการปุ่มกด "ลืม QR Code / ค้นหา QR Code" จากหน้าลงทะเบียน (Employee View)
 document.getElementById('showFindFormLink').addEventListener('click', (e) => {
     e.preventDefault();
-    document.getElementById('backFromFindBtn').classList.remove('d-none'); // โชว์ปุ่มย้อนกลับ
-    // เปลี่ยนข้อความปุ่มย้อนกลับให้ชัดเจนว่ากลับไปหน้าลงทะเบียน
-    document.getElementById('backFromFindBtn').innerText = "กลับไปหน้าลงทะเบียน";
+    
+    // ตั้งค่าปุ่มย้อนกลับ ให้รู้ว่าเป็น User ธรรมดา (ไม่ใช่ Admin)
+    const backBtn = document.getElementById('backFromFindBtn');
+    backBtn.classList.remove('d-none'); 
+    backBtn.innerText = "กลับไปหน้าลงทะเบียน"; // หรือใช้ translations ถ้าต้องการ
+    
+    // เปลี่ยนหน้า
     navigateTo(findSection); 
 });
 
-// จัดการปุ่ม "ย้อนกลับ" ในหน้าค้นหา
+// 2. จัดการปุ่ม "ย้อนกลับ" ในหน้าค้นหา
 document.getElementById('backFromFindBtn').addEventListener('click', () => {
     if (isAdminLoggedIn) {
-        // ถ้าเป็น Admin ให้กลับไปหน้า Admin Menu (logic เดิม)
-        registrationForm.classList.add('d-none'); // ซ่อนฟอร์มลงทะเบียน
-        adminActionsContainer.classList.remove('d-none'); // โชว์เมนู Admin
+        // กรณี Admin: กลับไปหน้าเมนู Admin
+        registrationForm.classList.add('d-none'); 
+        adminActionsContainer.classList.remove('d-none');
         navigateTo(registrationSection); 
     } else {
-        // ✅ ถ้าเป็น Employee ทั่วไป ให้กลับไปหน้าฟอร์มลงทะเบียน
+        // ✅ กรณี Employee: กลับไปหน้าฟอร์มลงทะเบียน
         registrationForm.classList.remove('d-none');
         adminActionsContainer.classList.add('d-none');
         navigateTo(registrationSection);
