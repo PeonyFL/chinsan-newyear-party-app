@@ -60,7 +60,7 @@ app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors,
 });
 
 app.post('/add-employee', async (req, res) => {
-    const { firstName, lastName, department, employeeId, isAdmin } = req.body;
+    const { employeeId, isAdmin, firstName, lastName, department } = req.body; // Keep these for Admin Manual Add
     const eid = String(employeeId).toUpperCase();
     
     const client = await db.connect();
@@ -73,21 +73,23 @@ app.post('/add-employee', async (req, res) => {
 
         if (existingUser) {
             // --- กรณีมีชื่อในระบบแล้ว ---
-
-            if (existingUser.registration_time) {
-                // ถ้าลงทะเบียนแล้ว -> ส่ง Error 409 พร้อมวันที่
-                await client.query('ROLLBACK');
-                return res.status(409).json({ 
-                    "error": "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว",
-                    "registeredAt": existingUser.registration_time 
-                });
-            } 
             
-            // ถ้ายังไม่ลงทะเบียน (มีแต่ชื่อจาก Excel) -> อัปเดตข้อมูล
-            await client.query(
-                "UPDATE employees SET first_name=$1, last_name=$2, department=$3, registration_time=NOW() WHERE employee_id=$4",
-                [firstName, lastName, department, eid]
-            );
+            // ถ้าเป็นการ Login เพื่อรับ QR (User ทั่วไป)
+            if (!isAdmin) {
+                // ถ้ายังไม่ลงทะเบียน ให้ลงทะเบียน
+                if (!existingUser.registration_time) {
+                    await client.query("UPDATE employees SET registration_time=NOW() WHERE employee_id=$1", [eid]);
+                }
+                // (ถ้าลงทะเบียนแล้ว ก็ปล่อยผ่าน ไปสร้าง QR ส่งกลับเลย ถือเป็นการ "Login")
+            } else {
+                // Admin Edit Logic (ถ้ามีการส่งข้อมูลมาแก้ไข)
+                 if (firstName && lastName) {
+                    await client.query(
+                        "UPDATE employees SET first_name=$1, last_name=$2, department=$3 WHERE employee_id=$4",
+                        [firstName, lastName, department, eid]
+                    );
+                 }
+            }
 
         } else {
             // --- กรณีไม่มีชื่อในระบบ (รหัสใหม่) ---
@@ -107,9 +109,13 @@ app.post('/add-employee', async (req, res) => {
         const qr = await qrcode.toDataURL(eid, { width: 350, margin: 1 });
         await client.query('COMMIT');
 
+        // Fetch latest data to return
+        const finalRes = await client.query("SELECT * FROM employees WHERE employee_id = $1", [eid]);
+        const userData = finalRes.rows[0];
+
         res.status(200).json({ 
-            "message": "ลงทะเบียนสำเร็จ", 
-            "data": { qrCode: qr, employeeId: eid } 
+            "message": "ลงทะเบียน/เข้าสู่ระบบ สำเร็จ", 
+            "data": { qrCode: qr, employeeId: eid, ...userData } 
         });
 
     } catch (err) {

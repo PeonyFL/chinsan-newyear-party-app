@@ -5,8 +5,8 @@ const API_BASE_URL = "https://chinsanparty-backend.onrender.com"; // เปล�
 const translations = {
     en: {
         page_title: "Chinsan New Year Party 2026", role_selection_title: "Please Select Your Role", employee_button: "Employee (New Year)",
-        main_title: "Chinsan New Year Party 2026", main_subtitle: "Fill in your information to receive a QR Code for entry",
-        form_firstname: "First Name", form_lastname: "Last Name", form_department: "Department", form_employee_id: "Employee ID",
+        main_title: "Chinsan New Year Party 2026", main_subtitle: "Enter Employee ID to Login",
+        form_firstname: "First Name", form_lastname: "Last Name", form_department: "Department", form_employee_id: "Password (Employee ID)",
         register_button: "Register", forgot_qr_link: "Forgot QR Code? / Find QR Code", search_button: "Search",
         back_to_register_link: "Back to Registration", save_qr_instruction: "Please save this QR Code for event entry.",
         back_to_main_button: "Back to Main", save_qr_button: "Save QR Code", admin_modal_title: "For Admin",
@@ -56,8 +56,8 @@ const translations = {
     },
     th: {
         page_title: "Chinsan New Year Party 2026", role_selection_title: "กรุณาเลือกบทบาทของคุณ", employee_button: "พนักงาน (งานปีใหม่)",
-        main_title: "Chinsan New Year Party 2026", main_subtitle: "กรอกข้อมูลเพื่อรับ QR Code สำหรับเข้างาน",
-        form_firstname: "ชื่อจริง", form_lastname: "นามสกุล", form_department: "ฝ่าย", form_employee_id: "รหัสพนักงาน",
+        main_title: "Chinsan New Year Party 2026", main_subtitle: "กรอกรหัสพนักงานเพื่อเข้าสู่ระบบ",
+        form_firstname: "ชื่อจริง", form_lastname: "นามสกุล", form_department: "ฝ่าย", form_employee_id: "รหัสผ่าน (รหัสพนักงาน)",
         register_button: "ลงทะเบียน", forgot_qr_link: "ลืม QR Code? / ค้นหา QR Code", search_button: "ค้นหา",
         back_to_register_link: "กลับไปหน้าลงทะเบียน", save_qr_instruction: "กรุณาบันทึก QR Code นี้ไว้สำหรับสแกนเข้างาน",
         back_to_main_button: "กลับไปหน้าหลัก", save_qr_button: "บันทึก QR Code", admin_modal_title: "สำหรับ Admin",
@@ -176,9 +176,9 @@ function setLanguage(lang) {
         const key = elem.getAttribute('data-key');
         if (translations[lang] && translations[lang][key]) {
             if (elem.hasAttribute('placeholder') && translations[lang][key]) {
-                 elem.placeholder = translations[lang][key];
+                elem.placeholder = translations[lang][key];
             } else {
-                 elem.innerText = translations[lang][key];
+                elem.innerText = translations[lang][key];
             }
         }
     });
@@ -188,24 +188,24 @@ function setLanguage(lang) {
 langThBtn.addEventListener('click', () => setLanguage('th'));
 langEnBtn.addEventListener('click', () => setLanguage('en'));
 
-document.addEventListener('DOMContentLoaded', async () => { 
+document.addEventListener('DOMContentLoaded', async () => {
     const savedLang = localStorage.getItem('language') || 'th';
     setLanguage(savedLang);
 
     if (window.location.hash === '#vote' || window.location.hash === '#newyear') {
-        await showEmployeeView(); 
+        await showEmployeeView();
     }
     else if (window.location.hash === '#sportday') {
         showSportdayView();
     }
 });
 
-window.addEventListener('hashchange', async () => { 
+window.addEventListener('hashchange', async () => {
     if (window.location.hash === '#vote' || window.location.hash === '#newyear') {
-        await showEmployeeView(); 
-    } 
+        await showEmployeeView();
+    }
     else if (window.location.hash === '#sportday') {
-        showSportdayView(); 
+        showSportdayView();
     }
 });
 
@@ -213,9 +213,33 @@ window.addEventListener('hashchange', async () => {
 document.getElementById('select-employee-btn').addEventListener('click', showEmployeeView);
 document.getElementById('select-admin-btn').addEventListener('click', () => adminPasswordModal.show());
 
-document.getElementById('showFindQrPageBtn').addEventListener('click', () => {
+// จัดการปุ่ม "ค้นหา QR Code" ในหน้าพนักงาน
+document.getElementById('showFindFormLink').addEventListener('click', (e) => {
+    e.preventDefault();
     document.getElementById('backFromFindBtn').classList.remove('d-none');
-    navigateTo(findSection); 
+    document.getElementById('backFromFindBtn').innerText = "กลับไปหน้าลงทะเบียน"; // เปลี่ยน text ให้เข้าใจง่าย
+    navigateTo(findSection);
+});
+
+// จัดการปุ่ม "ย้อนกลับ" จากหน้าค้นหา (แยก logic ระหว่าง Admin กับ Employee)
+document.getElementById('backFromFindBtn').addEventListener('click', () => {
+    if (isAdminLoggedIn) {
+        // Admin: กลับไปหน้า Registration ที่มีเมนู Admin
+        registrationForm.classList.add('d-none');
+        adminActionsContainer.classList.remove('d-none');
+        navigateTo(registrationSection);
+    } else {
+        // Employee: กลับไปหน้า Registration Form
+        registrationForm.classList.remove('d-none');
+        adminActionsContainer.classList.add('d-none');
+        navigateTo(registrationSection);
+    }
+});
+
+document.getElementById('showFindQrPageBtn').addEventListener('click', () => {
+    // ปุ่มนี้มาจาก Admin Menu
+    document.getElementById('backFromFindBtn').classList.remove('d-none');
+    navigateTo(findSection);
 });
 
 // Status Check Modal Logic
@@ -239,14 +263,15 @@ statusCheckModalEl.addEventListener('show.bs.modal', async () => {
     }
 });
 
-document.getElementById('backFromFindBtn').addEventListener('click', () => {
-    navigateTo(registrationSection); 
-});
 document.getElementById('showAddEmployeeFormBtn').addEventListener('click', () => {
-    registrationForm.classList.toggle('d-none'); 
+    registrationForm.classList.toggle('d-none');
+    // Show additional fields for Admin Manual Add
+    if (!registrationForm.classList.contains('d-none')) {
+        document.getElementById('additional-info-fields').classList.remove('d-none');
+    }
 });
 document.getElementById('showSportdayPageBtnAdmin').addEventListener('click', () => {
-    showSportdayView(); 
+    showSportdayView();
 });
 
 // Manage Vote Period Logic
@@ -330,11 +355,11 @@ closeVoteNowBtn.addEventListener('click', async () => {
 // Sport Day Navigation
 document.getElementById('select-sportday-btn').addEventListener('click', () => {
     isAdminLoggedIn = false;
-    showSportdayView(); 
+    showSportdayView();
 });
 document.getElementById('backFromSportdayBtn').addEventListener('click', () => {
     if (isAdminLoggedIn) {
-        adminActionsContainer.classList.remove('d-none'); 
+        adminActionsContainer.classList.remove('d-none');
         navigateTo(registrationSection);
     } else {
         appSections.classList.add('d-none');
@@ -353,8 +378,6 @@ function showSportdayView() {
     navigateTo(sportdaySection);
 }
 
-document.getElementById('showFindFormLink').addEventListener('click', (e) => { e.preventDefault(); navigateTo(findSection); });
-document.getElementById('showRegisterFormLink').addEventListener('click', (e) => { e.preventDefault(); navigateTo(registrationSection); });
 document.getElementById('backToFormBtn').addEventListener('click', () => {
     navigateTo(isAdminLoggedIn ? registrationSection : findSection);
 });
@@ -391,9 +414,9 @@ document.getElementById('managePrizesBtnAdmin').addEventListener('click', () => 
 
 function navigateTo(sectionToShow) {
     // Stop Polling if leaving Realtime Page
-    if (realtimeIntervalId && sectionToShow !== realtimeResultsSection) { 
-        clearInterval(realtimeIntervalId); 
-        realtimeIntervalId = null; 
+    if (realtimeIntervalId && sectionToShow !== realtimeResultsSection) {
+        clearInterval(realtimeIntervalId);
+        realtimeIntervalId = null;
     }
     // Stop Status Polling if leaving Vote Page (for safety)
     if (voteStatusPollIntervalId && sectionToShow !== voteSection) {
@@ -407,18 +430,17 @@ function navigateTo(sectionToShow) {
 
     allSections.forEach(sec => sec.classList.add('d-none'));
     sectionToShow.classList.remove('d-none');
-    mainHeaderContainer.classList.toggle('d-none', sectionToShow !== registrationSection && sectionToShow !== findSection); 
+    mainHeaderContainer.classList.toggle('d-none', sectionToShow !== registrationSection && sectionToShow !== findSection);
     mainCard.classList.toggle('fullscreen', fullScreenSections.includes(sectionToShow));
 
     if (sectionToShow === findSection) {
-        document.getElementById('backFromFindBtn').classList.toggle('d-none', !isAdminLoggedIn);
+        document.getElementById('backFromFindBtn').classList.toggle('d-none', !isAdminLoggedIn && !document.getElementById('backFromFindBtn').classList.contains('always-show'));
     }
 
     if (sectionToShow === registrationSection) {
+        // Toggle elements based on Login state
         registrationForm.classList.toggle('d-none', isAdminLoggedIn);
-         document.getElementById('managePrizesBtnAdmin').classList.toggle('d-none', !isAdminLoggedIn);
-         document.getElementById('manageCandidatesBtn').classList.toggle('d-none', !isAdminLoggedIn);
-         document.getElementById('showRealtimeResultsBtn').classList.toggle('d-none', !isAdminLoggedIn);
+        adminActionsContainer.classList.toggle('d-none', !isAdminLoggedIn);
     }
     if (sectionToShow !== voteSection) {
         resetVotePageUI();
@@ -427,7 +449,7 @@ function navigateTo(sectionToShow) {
 function displayError(message) { errorMessage.innerText = message || 'เกิดข้อผิดพลาดบางอย่าง'; errorToast.show(); }
 function displaySuccess(message) { successMessage.innerText = message || 'ดำเนินการสำเร็จ'; successToast.show(); }
 
-async function showEmployeeView() { 
+async function showEmployeeView() {
     isAdminLoggedIn = false;
     roleSelectionSection.classList.add('d-none');
     appSections.classList.remove('d-none');
@@ -436,11 +458,13 @@ async function showEmployeeView() {
     document.getElementById('backFromFindBtn').classList.add('d-none');
 
     if (window.location.hash === '#vote') {
-        await showVotePage(); 
+        await showVotePage();
     } else if (window.location.hash === '#newyear') {
         navigateTo(findSection);
     } else {
-        navigateTo(findSection);
+        // Ensure inputs are hidden for normal user
+        document.getElementById('additional-info-fields').classList.add('d-none');
+        navigateTo(registrationSection); // เปลี่ยน Default เป็นหน้าลงทะเบียน
     }
 }
 
@@ -468,15 +492,9 @@ adminPasswordForm.addEventListener('submit', (e) => {
 
 // --- Main Application Logic ---
 
-// --- ไฟล์ script.js ---
-
-// --- ไฟล์ script.js ---
-
-// --- ไฟล์ script.js ---
-
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const employeeData = {
         firstName: document.getElementById('firstName').value,
         lastName: document.getElementById('lastName').value,
@@ -484,7 +502,7 @@ registrationForm.addEventListener('submit', async (e) => {
         employeeId: document.getElementById('employeeId').value.toUpperCase(),
         isAdmin: isAdminLoggedIn
     };
-    
+
     try {
         const res = await fetch(`${API_BASE_URL}/add-employee`, {
             method: 'POST',
@@ -492,17 +510,26 @@ registrationForm.addEventListener('submit', async (e) => {
             body: JSON.stringify(employeeData)
         });
         const result = await res.json();
-        
+
         if (res.ok) {
-            // ✅ แก้ไขตรงนี้: เช็คว่าเป็น Admin หรือไม่?
             if (isAdminLoggedIn) {
                 // กรณี Admin: ให้แจ้งเตือนสำเร็จเฉยๆ (ไม่เปลี่ยนหน้า)
                 displaySuccess("ลงทะเบียนสำเร็จเรียบร้อย");
-                registrationForm.reset(); // ล้างฟอร์มรอคีย์คนต่อไป
+                registrationForm.reset();
             } else {
                 // กรณี User ทั่วไป: ให้เด้งไปหน้าแสดง QR Code
                 navigateTo(resultDiv);
-                document.getElementById('resultMessage').innerText = result.message;
+
+                // Show User Info
+                const userData = result.data;
+                const welcomeMsg = translations[localStorage.getItem('language') || 'th'].welcome_message || "ยินดีต้อนรับ";
+
+                document.getElementById('resultMessage').innerHTML = `
+                    ${welcomeMsg} <br>
+                    <span class="text-primary display-6 fw-bold">${userData.first_name} ${userData.last_name}</span><br>
+                    <small class="text-muted">${userData.department}</small>
+                `;
+
                 document.getElementById('qrCodeContainer').innerHTML = `
                     <img src="${result.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${result.data.employeeId}">
                 `;
@@ -510,19 +537,17 @@ registrationForm.addEventListener('submit', async (e) => {
             }
 
         } else if (res.status === 409) {
-            // กรณีลงทะเบียนซ้ำ
             let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
             if (result.registeredAt) {
                 const dateObj = new Date(result.registeredAt);
-                const dateStr = dateObj.toLocaleString('th-TH', { 
-                    year: 'numeric', month: 'long', day: 'numeric', 
-                    hour: '2-digit', minute: '2-digit' 
+                const dateStr = dateObj.toLocaleString('th-TH', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
                 });
                 msg += `\n(เมื่อ: ${dateStr})`;
             }
-            displayError(msg); 
+            displayError(msg);
         } else {
-            // Error อื่นๆ
             displayError(result.error);
         }
     } catch (err) {
@@ -530,51 +555,18 @@ registrationForm.addEventListener('submit', async (e) => {
     }
 });
 
-/// 1. จัดการปุ่มกด "ลืม QR Code / ค้นหา QR Code" จากหน้าลงทะเบียน (Employee View)
-document.getElementById('showFindFormLink').addEventListener('click', (e) => {
+findForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // ตั้งค่าปุ่มย้อนกลับ ให้รู้ว่าเป็น User ธรรมดา (ไม่ใช่ Admin)
-    const backBtn = document.getElementById('backFromFindBtn');
-    backBtn.classList.remove('d-none'); 
-    backBtn.innerText = "กลับไปหน้าลงทะเบียน"; // หรือใช้ translations ถ้าต้องการ
-    
-    // เปลี่ยนหน้า
-    navigateTo(findSection); 
+    const employeeId = document.getElementById('findEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); }
 });
-
-// 2. จัดการปุ่ม "ย้อนกลับ" ในหน้าค้นหา
-document.getElementById('backFromFindBtn').addEventListener('click', () => {
-    if (isAdminLoggedIn) {
-        // กรณี Admin: กลับไปหน้าเมนู Admin
-        registrationForm.classList.add('d-none'); 
-        adminActionsContainer.classList.remove('d-none');
-        navigateTo(registrationSection); 
-    } else {
-        // ✅ กรณี Employee: กลับไปหน้าฟอร์มลงทะเบียน
-        registrationForm.classList.remove('d-none');
-        adminActionsContainer.classList.add('d-none');
-        navigateTo(registrationSection);
-    }
-});
-
-document.getElementById('showFindFormLink').addEventListener('click', (e) => { 
-    e.preventDefault(); 
-    // กดแล้วให้ไปหน้า Find Section
-    navigateTo(findSection); 
-});
-
-findForm.addEventListener('submit', async (e) => { 
-    e.preventDefault(); 
-    const employeeId = document.getElementById('findEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } });
 checkinForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('checkinEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const response = await fetch(`${API_BASE_URL}/checkin`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ employeeId }) }); const result = await response.json(); const container = document.getElementById('checkinResultContainer'); container.classList.remove('d-none'); if (response.ok) { container.innerHTML = `<div class="alert alert-success d-flex align-items-center"><div class="status-icon me-3">✔️</div><div><h4 class="alert-heading">เช็คอินสำเร็จ</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.first_name} ${result.data.last_name}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>รหัสพนักงาน:</strong> ${result.data.employeeId}</p></div></div>`; } else if (response.status === 409) { const checkinTime = new Date(result.data.checkin_time).toLocaleString('th-TH'); container.innerHTML = `<div class="alert alert-warning d-flex align-items-center"><div class="status-icon me-3">⚠️</div><div><h4 class="alert-heading">เช็คอินไปแล้ว</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.first_name} ${result.data.last_name}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>เวลาที่เช็คอิน:</strong> ${checkinTime}</p></div></div>`; } else { container.innerHTML = `<div class="alert alert-danger d-flex align-items-center"><div class="status-icon me-3">❌</div><div><h4 class="alert-heading">ไม่พบข้อมูล</h4><p class="mb-0">กรุณาตรวจสอบรหัสพนักงานอีกครั้ง</p></div></div>`; } } catch (error) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } checkinForm.reset(); });
 
 async function fetchAndRenderEmployees() {
     try {
-        const res = await fetch(`${API_BASE_URL}/employees`); 
+        const res = await fetch(`${API_BASE_URL}/employees`);
         const result = await res.json();
         if (res.ok) {
-            allEmployeeData = result.data; 
+            allEmployeeData = result.data;
             const searchTerm = document.getElementById('employeeSearchInput').value.toLowerCase().trim();
             let dataToRender;
             if (searchTerm) {
@@ -587,15 +579,15 @@ async function fetchAndRenderEmployees() {
             } else {
                 dataToRender = allEmployeeData;
             }
-            renderEmployeeTable(dataToRender); 
+            renderEmployeeTable(dataToRender);
         }
     } catch (err) {
         console.error("Failed to fetch employees:", err.message);
     }
 }
 async function showEmployeeList() {
-    navigateTo(employeeListSection); 
-    document.getElementById('employeeSearchInput').value = ''; 
+    navigateTo(employeeListSection);
+    document.getElementById('employeeSearchInput').value = '';
     await fetchAndRenderEmployees();
 }
 function renderEmployeeTable(dataToRender) {
@@ -624,7 +616,7 @@ function renderEmployeeTable(dataToRender) {
         <td>${emp.sport_day_registered ? `✔️ <small>${new Date(emp.sport_day_reg_time).toLocaleString('th-TH')}</small>` : '❌'}</td>
         <td><button class="btn btn-danger btn-sm delete-btn" data-id="${emp.id}" data-key="delete_button">ลบ</button></td>
         </tr>`).join('');
-        
+
     container.innerHTML = tableHeader + tableBody + '</tbody></table>';
     const currentLang = localStorage.getItem('language') || 'th';
     document.querySelectorAll('[data-key="delete_button"]').forEach(elem => {
@@ -653,15 +645,15 @@ document.getElementById('employeeTableContainer').addEventListener('click', asyn
         const currentLang = localStorage.getItem('language') || 'th';
         if (confirm(translations[currentLang].delete_confirm_text)) {
             try {
-                const res = await fetch(`${API_BASE_URL}/employees/${employeeId}`, { 
-                    method: 'DELETE', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({}) 
+                const res = await fetch(`${API_BASE_URL}/employees/${employeeId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
                 });
                 const result = await res.json();
                 if (res.ok) {
                     displaySuccess('ลบข้อมูลสำเร็จ');
-                    showEmployeeList(); 
+                    showEmployeeList();
                 } else {
                     displayError(result.error);
                 }
@@ -726,7 +718,7 @@ async function loadPrizesToDisplay() {
         if (res.ok) {
             drawElements.prizeList.innerHTML = result.data
                 .map(prize => `<li class="list-group-item">${prize.name}</li>`)
-                .join('') || '<li class="list-group-item text-muted">ยังไม่มีรางวัล</li>'; 
+                .join('') || '<li class="list-group-item text-muted">ยังไม่มีรางวัล</li>';
         } else {
             drawElements.prizeList.innerHTML = `<li class="list-group-item text-danger">${result.error || 'Failed to load prizes'}</li>`;
         }
@@ -748,10 +740,10 @@ async function setupNewDraw() {
     drawElements.startBtn.disabled = true;
     drawElements.startBtn.innerText = 'กำลังเตรียมข้อมูล...';
     try {
-        await loadPrizesToDisplay(); 
+        await loadPrizesToDisplay();
         const [winRes, empRes] = await Promise.all([
-            fetch(`${API_BASE_URL}/draw`), 
-            fetch(`${API_BASE_URL}/employees`) 
+            fetch(`${API_BASE_URL}/draw`),
+            fetch(`${API_BASE_URL}/employees`)
         ]);
         if (!winRes.ok) throw new Error((await winRes.json()).error);
         if (!empRes.ok) throw new Error((await empRes.json()).error);
@@ -770,27 +762,27 @@ async function setupNewDraw() {
     } catch (err) {
         displayError(err.message);
         drawElements.startBtn.disabled = false;
-         drawElements.startBtn.innerText = translations[localStorage.getItem('language') || 'th']['start_draw_button'];
+        drawElements.startBtn.innerText = translations[localStorage.getItem('language') || 'th']['start_draw_button'];
     }
 }
 drawElements.nextBtn.addEventListener('click', async () => {
     const count = parseInt(drawElements.drawCountInput.value) || 1;
     const time = (parseInt(drawElements.drawTimeInput.value) || 3) * 1000;
-    if (currentWinnerIndex >= allWinners.length) return; 
-    drawElements.nextBtn.disabled = true; 
+    if (currentWinnerIndex >= allWinners.length) return;
+    drawElements.nextBtn.disabled = true;
     for (let i = 0; i < count; i++) {
         if (currentWinnerIndex >= allWinners.length) {
             drawElements.currentPrize.innerText = "จับรางวัลครบแล้ว!";
-            break; 
+            break;
         }
-        updatePrizeDisplay(); 
+        updatePrizeDisplay();
         const winner = allWinners[currentWinnerIndex];
-        await runSingleDrawAnimation(winner, time); 
-        currentWinnerIndex++; 
+        await runSingleDrawAnimation(winner, time);
+        currentWinnerIndex++;
     }
     if (currentWinnerIndex < allWinners.length) {
-        updatePrizeDisplay(); 
-        drawElements.nextBtn.disabled = false; 
+        updatePrizeDisplay();
+        drawElements.nextBtn.disabled = false;
     } else {
         drawElements.nextBtn.classList.add('d-none');
         drawElements.resetBtn.classList.remove('d-none');
@@ -809,7 +801,7 @@ async function runSingleDrawAnimation(winner, animationTime) {
     drawElements.slotName.innerText = `${winner.first_name} ${winner.last_name}`;
     drawElements.slotId.innerText = winner.employee_id;
     const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')).map(li => li.innerText);
-    const prize = prizes[currentWinnerIndex]; 
+    const prize = prizes[currentWinnerIndex];
     drawElements.winnersContainer.classList.remove('d-none');
     const li = document.createElement('li');
     li.className = 'list-group-item';
@@ -859,7 +851,7 @@ prizeListContainer.addEventListener('click', async (e) => {
 });
 addPrizeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const newName = newPrizeNameInput.value.trim(); 
+    const newName = newPrizeNameInput.value.trim();
     if (!newName) return;
     if (!confirm("ยืนยันการเพิ่มรางวัล?")) return;
     await addPrize(newName);
@@ -873,9 +865,9 @@ resetPrizesBtn.addEventListener('click', async () => {
         } catch (err) { displayError(err.message); }
     }
 });
-async function addPrize(name) { try { await fetch(`${API_BASE_URL}/prizes`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) }); displaySuccess('เพิ่มสำเร็จ'); await loadPrizesToManager(); } catch(e){ displayError(e.message); } }
-async function editPrize(id, name) { try { await fetch(`${API_BASE_URL}/prizes/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) }); displaySuccess('แก้ไขสำเร็จ'); await loadPrizesToManager(); } catch(e){ displayError(e.message); } }
-async function deletePrize(id) { try { await fetch(`${API_BASE_URL}/prizes/${id}`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) }); displaySuccess('ลบสำเร็จ'); await loadPrizesToManager(); } catch(e){ displayError(e.message); } }
+async function addPrize(name) { try { await fetch(`${API_BASE_URL}/prizes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }); displaySuccess('เพิ่มสำเร็จ'); await loadPrizesToManager(); } catch (e) { displayError(e.message); } }
+async function editPrize(id, name) { try { await fetch(`${API_BASE_URL}/prizes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }); displaySuccess('แก้ไขสำเร็จ'); await loadPrizesToManager(); } catch (e) { displayError(e.message); } }
+async function deletePrize(id) { try { await fetch(`${API_BASE_URL}/prizes/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); displaySuccess('ลบสำเร็จ'); await loadPrizesToManager(); } catch (e) { displayError(e.message); } }
 
 // --- Vote Logic ---
 const voteElements = {
@@ -895,7 +887,7 @@ const voteElements = {
 function resetVotePageUI() {
     if (voteCountdownIntervalId) { clearInterval(voteCountdownIntervalId); voteCountdownIntervalId = null; }
     if (voteStatusPollIntervalId) { clearInterval(voteStatusPollIntervalId); voteStatusPollIntervalId = null; }
-    if (voteCountdownContainer) { 
+    if (voteCountdownContainer) {
         voteCountdownContainer.classList.add('d-none');
         voteCountdownContainer.classList.remove('alert-danger');
         voteCountdownContainer.classList.add('alert-info');
@@ -906,7 +898,7 @@ function resetVotePageUI() {
     voteElements.eligibilityCheckDiv.classList.remove('d-none');
     voteElements.mainVoteArea.classList.add('d-none');
     voteElements.employeeIdInput.value = '';
-    voteElements.employeeIdInput.disabled = false; 
+    voteElements.employeeIdInput.disabled = false;
     voteElements.eligibilityMessage.innerText = '';
     voteElements.candidateList.innerHTML = '';
     voteElements.resultsContainer.classList.add('d-none');
@@ -916,10 +908,10 @@ function resetVotePageUI() {
     voteElements.checkEligibilityBtn.innerText = 'ตรวจสอบสิทธิ์';
 }
 
-async function showVotePage() { 
+async function showVotePage() {
     navigateTo(voteSection);
     const backBtn = document.getElementById('backFromVoteBtn');
-    
+
     // Check status ONCE (Safe for users)
     if (window.location.hash === '#vote') {
         backBtn.classList.add('d-none');
@@ -928,12 +920,12 @@ async function showVotePage() {
             const result = await res.json();
             if (!result.is_open) {
                 const lang = localStorage.getItem('language') || 'th';
-                voteElements.eligibilityMessage.innerText = translations[lang]['vote_status_closed']; 
-                voteElements.eligibilityMessage.classList.remove('d-none'); 
-                voteElements.eligibilityCheckDiv.classList.add('d-none'); 
+                voteElements.eligibilityMessage.innerText = translations[lang]['vote_status_closed'];
+                voteElements.eligibilityMessage.classList.remove('d-none');
+                voteElements.eligibilityCheckDiv.classList.add('d-none');
             } else {
-                voteElements.eligibilityMessage.classList.add('d-none'); 
-                voteElements.eligibilityCheckDiv.classList.remove('d-none'); 
+                voteElements.eligibilityMessage.classList.add('d-none');
+                voteElements.eligibilityCheckDiv.classList.remove('d-none');
             }
         } catch (err) {
             voteElements.eligibilityMessage.innerText = `Error: ${err.message}`;
@@ -959,7 +951,7 @@ voteElements.checkEligibilityBtn.addEventListener('click', async () => {
             voteElements.voteUserMessage.innerText = `รหัสพนักงาน: ${employeeId} (${result.message})`;
             voteElements.mainVoteArea.classList.remove('d-none');
             await loadCandidatesForVoting();
-            if (result.deadline) startVoteCountdown(result.deadline); 
+            if (result.deadline) startVoteCountdown(result.deadline);
         } else {
             voteElements.eligibilityMessage.innerText = result.message || `Error ${res.status}`;
         }
@@ -992,23 +984,23 @@ voteElements.form.addEventListener('submit', async (e) => {
     const selected = document.querySelector('input[name="candidate"]:checked');
     if (!selected) { displayError('กรุณาเลือกผู้เข้าประกวด'); return; }
     if (!currentVotingEmployeeId) { displayError('ไม่พบรหัสพนักงาน'); resetVotePageUI(); return; }
-    
+
     const submitButton = voteElements.form.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังส่ง...';
     try {
         const res = await fetch(`${API_BASE_URL}/vote`, {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ employeeId: currentVotingEmployeeId, candidateId: selected.value }),
-         });
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ employeeId: currentVotingEmployeeId, candidateId: selected.value }),
+        });
         const result = await res.json();
         if (res.ok) {
             displaySuccess('โหวตสำเร็จ!');
-            resetVotePageUI(); 
+            resetVotePageUI();
         } else {
-             displayError(result.error || 'ไม่สามารถส่งผลโหวตได้');
-             if(res.status !== 409) resetVotePageUI();
+            displayError(result.error || 'ไม่สามารถส่งผลโหวตได้');
+            if (res.status !== 409) resetVotePageUI();
         }
     } catch (err) {
         displayError(`Error: ${err.message}`);
@@ -1025,7 +1017,7 @@ async function loadVoteResults() {
         const res = await fetch(`${API_BASE_URL}/results`);
         const result = await res.json();
         if (res.ok) {
-             voteElements.resultsList.innerHTML = result.data.map(c => `<li class="list-group-item"><span>${c.name} (${c.department})</span><span class="badge bg-primary rounded-pill">${c.votes} คะแนน</span></li>`).join('') || '<li class="list-group-item text-muted">ยังไม่มีผลโหวต</li>';
+            voteElements.resultsList.innerHTML = result.data.map(c => `<li class="list-group-item"><span>${c.name} (${c.department})</span><span class="badge bg-primary rounded-pill">${c.votes} คะแนน</span></li>`).join('') || '<li class="list-group-item text-muted">ยังไม่มีผลโหวต</li>';
             voteElements.resultsContainer.classList.remove('d-none');
         }
     } catch (err) {
@@ -1036,7 +1028,7 @@ async function loadVoteResults() {
 function startVoteCountdown(deadlineISO) {
     if (voteCountdownIntervalId) clearInterval(voteCountdownIntervalId);
     const deadline = new Date(deadlineISO).getTime();
-    voteCountdownContainer.classList.remove('d-none'); 
+    voteCountdownContainer.classList.remove('d-none');
     const updateTimer = () => {
         const now = new Date().getTime();
         const distance = deadline - now;
@@ -1046,7 +1038,7 @@ function startVoteCountdown(deadlineISO) {
             voteCountdownTimer.innerText = "00:00";
             voteCountdownContainer.classList.remove('alert-info');
             voteCountdownContainer.classList.add('alert-danger');
-            voteElements.form.classList.add('d-none'); 
+            voteElements.form.classList.add('d-none');
             let timeUpMsg = document.getElementById('vote-time-up-msg');
             if (!timeUpMsg) {
                 timeUpMsg = document.createElement('div');
@@ -1064,8 +1056,8 @@ function startVoteCountdown(deadlineISO) {
             voteCountdownContainer.classList.add('alert-info');
         }
     };
-    updateTimer(); 
-    voteCountdownIntervalId = setInterval(updateTimer, 1000); 
+    updateTimer();
+    voteCountdownIntervalId = setInterval(updateTimer, 1000);
 }
 
 function startAdminCountdown(deadlineISO) {
@@ -1079,15 +1071,15 @@ function startAdminCountdown(deadlineISO) {
             adminVoteCountdownIntervalId = null;
             if (adminVoteCountdown) adminVoteCountdown.innerText = "00:00";
             const modalInstance = bootstrap.Modal.getInstance(manageVotePeriodModalEl);
-            if (modalInstance && modalInstance._isShown) loadVoteStatus(); 
+            if (modalInstance && modalInstance._isShown) loadVoteStatus();
         } else {
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             if (adminVoteCountdown) adminVoteCountdown.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
     };
-    updateAdminTimer(); 
-    adminVoteCountdownIntervalId = setInterval(updateAdminTimer, 1000); 
+    updateAdminTimer();
+    adminVoteCountdownIntervalId = setInterval(updateAdminTimer, 1000);
 }
 
 // --- Candidate Management ---
@@ -1139,12 +1131,12 @@ addCandidateForm.addEventListener('submit', async (e) => {
 });
 resetCandidatesBtn.addEventListener('click', async () => {
     if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบและรีเซ็ตทั้งหมด?")) {
-        try { await fetch(`${API_BASE_URL}/candidates/reset`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) }); displaySuccess('รีเซ็ตสำเร็จ'); await loadCandidatesToManager(); } catch(e){ displayError(e.message); }
+        try { await fetch(`${API_BASE_URL}/candidates/reset`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); displaySuccess('รีเซ็ตสำเร็จ'); await loadCandidatesToManager(); } catch (e) { displayError(e.message); }
     }
 });
-async function addCandidate(name, department) { try { await fetch(`${API_BASE_URL}/candidates`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, department}) }); displaySuccess('สำเร็จ'); await loadCandidatesToManager(); } catch(e){ displayError(e.message); } }
-async function editCandidate(id, name, department) { try { await fetch(`${API_BASE_URL}/candidates/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, department}) }); displaySuccess('สำเร็จ'); await loadCandidatesToManager(); } catch(e){ displayError(e.message); } }
-async function deleteCandidate(id) { try { await fetch(`${API_BASE_URL}/candidates/${id}`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) }); displaySuccess('สำเร็จ'); await loadCandidatesToManager(); } catch(e){ displayError(e.message); } }
+async function addCandidate(name, department) { try { await fetch(`${API_BASE_URL}/candidates`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, department }) }); displaySuccess('สำเร็จ'); await loadCandidatesToManager(); } catch (e) { displayError(e.message); } }
+async function editCandidate(id, name, department) { try { await fetch(`${API_BASE_URL}/candidates/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, department }) }); displaySuccess('สำเร็จ'); await loadCandidatesToManager(); } catch (e) { displayError(e.message); } }
+async function deleteCandidate(id) { try { await fetch(`${API_BASE_URL}/candidates/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); displaySuccess('สำเร็จ'); await loadCandidatesToManager(); } catch (e) { displayError(e.message); } }
 
 // --- Real-time Results (Admin Only - Enabled Polling) ---
 const realtimeContainer = document.getElementById('realtime-candidates-container');
@@ -1152,8 +1144,8 @@ const totalVotesSpan = document.getElementById('totalVotes');
 
 function showRealtimeResultsPage() {
     navigateTo(realtimeResultsSection);
-    fetchAndDisplayRealtimeResults(); 
-    
+    fetchAndDisplayRealtimeResults();
+
     // ✅ ENABLED: เปิด Auto-Refresh เฉพาะหน้านี้ เพราะมีแค่ Admin ดู
     if (!realtimeIntervalId) {
         realtimeIntervalId = setInterval(fetchAndDisplayRealtimeResults, 3000); // ทุก 3 วินาที
@@ -1187,7 +1179,6 @@ async function fetchAndDisplayRealtimeResults() {
 
 // --- Export & Upload ---
 async function exportToExcel() {
-    // ... (เหมือนเดิม ขอละไว้เพื่อความกระชับ) ...
     const btn = document.getElementById('confirm-export-btn');
     btn.disabled = true;
     try {
@@ -1196,20 +1187,20 @@ async function exportToExcel() {
         const exportVotes = document.getElementById('export-votes-check').checked;
         const promises = [];
         if (exportEmployees) promises.push(fetch(`${API_BASE_URL}/employees`).then(res => res.json()));
-        if (exportWinners) { promises.push(fetch(`${API_BASE_URL}/draw`).then(res => res.json().catch(()=>({data:[]})))); promises.push(fetch(`${API_BASE_URL}/prizes`).then(res => res.json())); }
+        if (exportWinners) { promises.push(fetch(`${API_BASE_URL}/draw`).then(res => res.json().catch(() => ({ data: [] })))); promises.push(fetch(`${API_BASE_URL}/prizes`).then(res => res.json())); }
         if (exportVotes) promises.push(fetch(`${API_BASE_URL}/results`).then(res => res.json()));
-        
+
         const results = await Promise.all(promises);
         const wb = XLSX.utils.book_new();
         let i = 0;
         if (exportEmployees) {
             const d = results[i++].data;
             if (d) {
-                const sheet = XLSX.utils.json_to_sheet(d.map(e=>({
-                    'รหัส':e.employee_id, 
-                    'ชื่อ':e.first_name, 
-                    'สกุล':e.last_name, 
-                    'ฝ่าย':e.department,
+                const sheet = XLSX.utils.json_to_sheet(d.map(e => ({
+                    'รหัส': e.employee_id,
+                    'ชื่อ': e.first_name,
+                    'สกุล': e.last_name,
+                    'ฝ่าย': e.department,
                     'ยืนยันลงทะเบียน': e.registration_time ? '✔️ ลงแล้ว' : '❌',
                     'สถานะเช็คอิน': e.checked_in ? '✔️ มาแล้ว' : '❌',
                     'Sport Day Status': e.sport_day_registered ? '✔️ ลงแล้ว' : '❌'
@@ -1218,22 +1209,22 @@ async function exportToExcel() {
             }
         }
         if (exportWinners) {
-            const w = results[i++].data; const p = results[i++].data.map(x=>x.name);
-            if(w && p) {
-                const sheet = XLSX.utils.json_to_sheet(w.map((e,idx)=>({'รางวัล':p[idx]||'Prize', 'ผู้รับ':e.first_name+' '+e.last_name})));
+            const w = results[i++].data; const p = results[i++].data.map(x => x.name);
+            if (w && p) {
+                const sheet = XLSX.utils.json_to_sheet(w.map((e, idx) => ({ 'รางวัล': p[idx] || 'Prize', 'ผู้รับ': e.first_name + ' ' + e.last_name })));
                 XLSX.utils.book_append_sheet(wb, sheet, "Winners");
             }
         }
         if (exportVotes) {
             const v = results[i++].data;
-            if(v) {
-                const sheet = XLSX.utils.json_to_sheet(v.map(c=>({'ชื่อ':c.name, 'คะแนน':c.votes})));
+            if (v) {
+                const sheet = XLSX.utils.json_to_sheet(v.map(c => ({ 'ชื่อ': c.name, 'คะแนน': c.votes })));
                 XLSX.utils.book_append_sheet(wb, sheet, "Votes");
             }
         }
         XLSX.writeFile(wb, "Party_Data.xlsx");
         bootstrap.Modal.getInstance(document.getElementById('exportExcelModal')).hide();
-    } catch(e) { displayError(e.message); } finally { btn.disabled = false; }
+    } catch (e) { displayError(e.message); } finally { btn.disabled = false; }
 }
 
 document.getElementById('uploadEmployeeForm').addEventListener('submit', async (e) => {
@@ -1243,8 +1234,8 @@ document.getElementById('uploadEmployeeForm').addEventListener('submit', async (
     try {
         const res = await fetch(`${API_BASE_URL}/upload-employees`, { method: 'POST', body: formData });
         const r = await res.json();
-        if(res.ok) { displaySuccess(r.message); } else { displayError(r.error); }
-    } catch(e) { displayError(e.message); }
+        if (res.ok) { displaySuccess(r.message); } else { displayError(r.error); }
+    } catch (e) { displayError(e.message); }
 });
 
 // Sport Day Register
