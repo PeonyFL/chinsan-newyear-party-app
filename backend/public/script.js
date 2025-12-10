@@ -472,6 +472,8 @@ adminPasswordForm.addEventListener('submit', (e) => {
 
 // --- ไฟล์ script.js ---
 
+// --- ไฟล์ script.js ---
+
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -492,15 +494,23 @@ registrationForm.addEventListener('submit', async (e) => {
         const result = await res.json();
         
         if (res.ok) {
-            // ถ้าสำเร็จ (Status 200) -> ไปหน้า QR Code
-            navigateTo(resultDiv);
-            document.getElementById('resultMessage').innerText = result.message;
-            document.getElementById('qrCodeContainer').innerHTML = `
-                <img src="${result.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${result.data.employeeId}">
-            `;
-            registrationForm.reset();
+            // ✅ แก้ไขตรงนี้: เช็คว่าเป็น Admin หรือไม่?
+            if (isAdminLoggedIn) {
+                // กรณี Admin: ให้แจ้งเตือนสำเร็จเฉยๆ (ไม่เปลี่ยนหน้า)
+                displaySuccess("ลงทะเบียนสำเร็จเรียบร้อย");
+                registrationForm.reset(); // ล้างฟอร์มรอคีย์คนต่อไป
+            } else {
+                // กรณี User ทั่วไป: ให้เด้งไปหน้าแสดง QR Code
+                navigateTo(resultDiv);
+                document.getElementById('resultMessage').innerText = result.message;
+                document.getElementById('qrCodeContainer').innerHTML = `
+                    <img src="${result.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${result.data.employeeId}">
+                `;
+                registrationForm.reset();
+            }
+
         } else if (res.status === 409) {
-            // ✅ ถ้าซ้ำ (Status 409) -> แสดง Error สีแดง + วันที่ (ไม่ไปหน้า QR)
+            // กรณีลงทะเบียนซ้ำ
             let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
             if (result.registeredAt) {
                 const dateObj = new Date(result.registeredAt);
@@ -512,7 +522,7 @@ registrationForm.addEventListener('submit', async (e) => {
             }
             displayError(msg); 
         } else {
-            // กรณี Error อื่นๆ
+            // Error อื่นๆ
             displayError(result.error);
         }
     } catch (err) {
