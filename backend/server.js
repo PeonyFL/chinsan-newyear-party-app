@@ -59,14 +59,6 @@ app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors,
     }
 });
 
-// --- ไฟล์ server.js ---
-
-// --- ไฟล์ server.js ---
-
-// --- ไฟล์ server.js ---
-
-// --- ไฟล์ server.js (แก้ไข endpoint /add-employee) ---
-
 app.post('/add-employee', async (req, res) => {
     const { firstName, lastName, department, employeeId, isAdmin } = req.body;
     const eid = String(employeeId).toUpperCase();
@@ -83,8 +75,7 @@ app.post('/add-employee', async (req, res) => {
             // --- กรณีมีชื่อในระบบแล้ว ---
 
             if (existingUser.registration_time) {
-                // ✅ จุดที่ต้องแก้: ต้องส่ง status 409 (Conflict) เพื่อบอกว่าซ้ำ
-                // ห้ามส่ง 200 เด็ดขาด ไม่งั้นหน้าเว็บจะนึกว่าสำเร็จและโชว์ QR
+                // ถ้าลงทะเบียนแล้ว -> ส่ง Error 409 พร้อมวันที่
                 await client.query('ROLLBACK');
                 return res.status(409).json({ 
                     "error": "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว",
@@ -101,17 +92,18 @@ app.post('/add-employee', async (req, res) => {
         } else {
             // --- กรณีไม่มีชื่อในระบบ (รหัสใหม่) ---
             if (isAdmin) {
+                // Admin เพิ่มได้
                 await client.query(
                     "INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES ($1, $2, $3, $4, NOW())",
                     [firstName, lastName, department, eid]
                 );
             } else {
+                // User เพิ่มเองไม่ได้ ถ้าไม่มีใน Excel
                 await client.query('ROLLBACK');
                 return res.status(404).json({ "error": "ไม่พบข้อมูลในระบบ (กรุณาติดต่อ Admin เพื่อเพิ่มรายชื่อ)" });
             }
         }
 
-        // กรณีสำเร็จ (Insert หรือ Update ครั้งแรก) -> สร้าง QR
         const qr = await qrcode.toDataURL(eid, { width: 350, margin: 1 });
         await client.query('COMMIT');
 
@@ -128,16 +120,20 @@ app.post('/add-employee', async (req, res) => {
     }
 });
 
-// ส่วน Find QR คงเดิมไว้ (ตามที่คุยกันรอบที่แล้ว)
 app.get('/find/:employeeId', async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM employees WHERE employee_id = $1", [req.params.employeeId.toUpperCase()]);
         const row = result.rows[0];
         
+        // ต้องมีข้อมูล AND มีเวลาลงทะเบียนแล้ว เท่านั้นถึงจะส่ง QR
         if (row && row.registration_time) {
             const qr = await qrcode.toDataURL(row.employee_id, { width: 350, margin: 1 });
-            res.status(200).json({ "message": "พบข้อมูล QR Code", "data": { ...row, "qrCode": qr } });
+            res.status(200).json({
+                "message": "พบข้อมูล QR Code",
+                "data": { ...row, "qrCode": qr }
+            });
         } else {
+            // ถ้าไม่เจอ หรือ เจอแต่ยังไม่ลงทะเบียน ให้บอกไม่พบ
             res.status(404).json({ "error": "ไม่พบข้อมูล (หรือยังไม่ได้ลงทะเบียน)" });
         }
     } catch (err) { res.status(500).json({ "error": err.message }); }
@@ -252,7 +248,7 @@ app.post('/prizes/reset', async (req, res) => {
     res.json({ message: "รีเซ็ตรางวัลแล้ว" });
 });
 
-// --- Vote Endpoints (FIXED for Burst Load) ---
+// --- Vote Endpoints ---
 
 app.get('/vote-status', async (req, res) => {
     const result = await db.query("SELECT * FROM vote_status WHERE id = 1");
@@ -270,7 +266,6 @@ app.post('/vote/close', async (req, res) => {
     res.json({ message: "ปิดโหวตแล้ว" });
 });
 
-// --- FIXED: ใช้ COUNT(*) แทนการอ่านค่า votes ที่ตายตัว ---
 app.get('/candidates', async (req, res) => {
     const sql = `
         SELECT c.id, c.name, c.department, COUNT(v.employee_id)::int as votes 
@@ -295,7 +290,6 @@ app.get('/results', async (req, res) => {
     res.json({ data: result.rows });
 });
 
-// --- FIXED: เอา UPDATE candidates ออก เพื่อลด Lock ---
 app.post('/vote', async (req, res) => {
     const { employeeId, candidateId } = req.body;
     const eid = employeeId.toUpperCase();
@@ -316,7 +310,6 @@ app.post('/vote', async (req, res) => {
             return res.status(403).json({ "error": "ไม่มีสิทธิ์ หรือยังไม่เช็คอิน" });
         }
 
-        // 3. Insert Vote (Fast Insert) - ตัด UPDATE candidate ทิ้ง
         await client.query("INSERT INTO votes (employee_id, candidate_id) VALUES ($1, $2)", [eid, candidateId]);
         
         await client.query('COMMIT');
