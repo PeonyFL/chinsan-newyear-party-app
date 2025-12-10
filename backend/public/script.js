@@ -167,6 +167,7 @@ let voteCountdownIntervalId = null;
 let adminVoteCountdownIntervalId = null;
 let voteStatusPollIntervalId = null;
 let isAdminLoggedIn = false;
+let returnToSection = registrationSection; // Default return path
 
 // --- Language Switcher Logic ---
 function setLanguage(lang) {
@@ -379,7 +380,7 @@ function showSportdayView() {
 }
 
 document.getElementById('backToFormBtn').addEventListener('click', () => {
-    navigateTo(isAdminLoggedIn ? registrationSection : findSection);
+    navigateTo(returnToSection);
 });
 document.getElementById('viewEmployeesBtn').addEventListener('click', showEmployeeList);
 document.getElementById('backFromListBtn').addEventListener('click', () => navigateTo(registrationSection));
@@ -501,75 +502,87 @@ registrationForm.addEventListener('submit', async (e) => {
         department: document.getElementById('department').value,
         employeeId: document.getElementById('employeeId').value.toUpperCase(),
         isAdmin: isAdminLoggedIn
-    };
+    const employeeData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            department: document.getElementById('department').value,
+            employeeId: document.getElementById('employeeId').value.toUpperCase(),
+            isAdmin: isAdminLoggedIn
+        };
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/add-employee`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(employeeData)
-        });
-        const result = await res.json();
+        // Set return path before navigating away or on success
+        returnToSection = registrationSection;
 
-        if (res.ok) {
-            if (isAdminLoggedIn) {
-                // กรณี Admin: ให้แจ้งเตือนสำเร็จเฉยๆ (ไม่เปลี่ยนหน้า)
-                displaySuccess("ลงทะเบียนสำเร็จเรียบร้อย");
-                registrationForm.reset();
-            } else {
-                // กรณี User ทั่วไป: ให้เด้งไปหน้าแสดง QR Code
-                navigateTo(resultDiv);
+        try {
+            const res = await fetch(`${API_BASE_URL}/add-employee`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(employeeData)
+            });
+            const result = await res.json();
 
-                // Show User Info
-                const userData = result.data;
-                const welcomeMsg = translations[localStorage.getItem('language') || 'th'].welcome_message || "ยินดีต้อนรับ";
+            if(res.ok) {
+    if (isAdminLoggedIn) {
+        // กรณี Admin: ให้แจ้งเตือนสำเร็จเฉยๆ (ไม่เปลี่ยนหน้า)
+        displaySuccess("ลงทะเบียนสำเร็จเรียบร้อย");
+        registrationForm.reset();
+    } else {
+        // กรณี User ทั่วไป: ให้เด้งไปหน้าแสดง QR Code
+        navigateTo(resultDiv);
 
-                document.getElementById('resultMessage').innerHTML = `
+        // Show User Info
+        const userData = result.data;
+        const welcomeMsg = translations[localStorage.getItem('language') || 'th'].welcome_message || "ยินดีต้อนรับ";
+
+        document.getElementById('resultMessage').innerHTML = `
                     ${welcomeMsg} <br>
                     <span class="text-primary display-6 fw-bold">${userData.first_name} ${userData.last_name}</span><br>
                     <small class="text-muted">${userData.department}</small>
                 `;
-                document.getElementById('resultMessage').classList.remove('text-warning');
-                document.getElementById('resultMessage').classList.add('text-success');
+        document.getElementById('resultMessage').classList.remove('text-warning');
+        document.getElementById('resultMessage').classList.add('text-success');
 
-                document.getElementById('qrCodeContainer').innerHTML = `
+        document.getElementById('qrCodeContainer').innerHTML = `
                     <img src="${result.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${result.data.employeeId}">
                 `;
-                registrationForm.reset();
-            }
-
-        } else if (res.status === 409) {
-            let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
-            if (result.registeredAt) {
-                const dateObj = new Date(result.registeredAt);
-                const dateStr = dateObj.toLocaleString('th-TH', {
-                    year: 'numeric', month: 'long', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                });
-                msg += `\n(เมื่อ: ${dateStr})`;
-            }
-            // Show in result div instead of error toast
-            // Show in result div instead of error toast
-            navigateTo(resultDiv);
-            document.getElementById('resultMessage').innerText = msg; // InnerText handles \n as line break in some containers, but innerHTML with <br> is safer if needed. using innerText with CSS white-space: pre-wrap; is better. But standard h4 might ignore \n.
-            // Using innerHTML for safety
-            document.getElementById('resultMessage').innerHTML = msg.replace(/\n/g, '<br>');
-
-            document.getElementById('resultMessage').classList.remove('text-success');
-            document.getElementById('resultMessage').classList.add('text-warning');
-            document.getElementById('qrCodeContainer').innerHTML = '<div class="text-warning py-3"><i class="fa-solid fa-clock-rotate-left fa-3x"></i></div>';
-            registrationForm.reset();
-        } else {
-            displayError(result.error);
-        }
-    } catch (err) {
-        displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+        registrationForm.reset();
     }
+
+} else if (res.status === 409) {
+    let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
+    if (result.registeredAt) {
+        const dateObj = new Date(result.registeredAt);
+        const dateStr = dateObj.toLocaleString('th-TH', {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+        msg += `\n(เมื่อ: ${dateStr})`;
+    }
+    // Show in result div instead of error toast
+    // Show in result div instead of error toast
+    navigateTo(resultDiv);
+    document.getElementById('resultMessage').innerText = msg; // InnerText handles \n as line break in some containers, but innerHTML with <br> is safer if needed. using innerText with CSS white-space: pre-wrap; is better. But standard h4 might ignore \n.
+    // Using innerHTML for safety
+    document.getElementById('resultMessage').innerHTML = msg.replace(/\n/g, '<br>');
+
+    document.getElementById('resultMessage').classList.remove('text-success');
+    document.getElementById('resultMessage').classList.add('text-warning');
+    document.getElementById('qrCodeContainer').innerHTML = '<div class="text-warning py-3"><i class="fa-solid fa-clock-rotate-left fa-3x"></i></div>';
+    registrationForm.reset();
+} else {
+    displayError(result.error);
+}
+    } catch (err) {
+    displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+}
 });
 
 findForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const employeeId = document.getElementById('findEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); }
+    const employeeId = document.getElementById('findEmployeeId').value.toUpperCase();
+    if (!employeeId) return;
+    returnToSection = findSection; // Set return path
+    try { const res = await fetch(`${API_BASE_URL}/find/${employeeId}`); const data = await res.json(); if (res.ok) { navigateTo(resultDiv); document.getElementById('resultMessage').innerText = data.message; document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${data.data.employeeId}">`; } else { displayError(data.error); } } catch (err) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); }
 });
 checkinForm.addEventListener('submit', async (e) => { e.preventDefault(); const employeeId = document.getElementById('checkinEmployeeId').value.toUpperCase(); if (!employeeId) return; try { const response = await fetch(`${API_BASE_URL}/checkin`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ employeeId }) }); const result = await response.json(); const container = document.getElementById('checkinResultContainer'); container.classList.remove('d-none'); if (response.ok) { container.innerHTML = `<div class="alert alert-success d-flex align-items-center"><div class="status-icon me-3">✔️</div><div><h4 class="alert-heading">เช็คอินสำเร็จ</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.first_name} ${result.data.last_name}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>รหัสพนักงาน:</strong> ${result.data.employee_id}</p></div></div>`; } else if (response.status === 409) { const checkinTime = new Date(result.data.checkin_time).toLocaleString('th-TH'); container.innerHTML = `<div class="alert alert-warning d-flex align-items-center"><div class="status-icon me-3">⚠️</div><div><h4 class="alert-heading">เช็คอินไปแล้ว</h4><p class="mb-0"><strong>ชื่อ:</strong> ${result.data.first_name} ${result.data.last_name}</p><p class="mb-0"><strong>ฝ่าย:</strong> ${result.data.department}</p><p class="mb-0"><strong>เวลาที่เช็คอิน:</strong> ${checkinTime}</p></div></div>`; } else { container.innerHTML = `<div class="alert alert-danger d-flex align-items-center"><div class="status-icon me-3">❌</div><div><h4 class="alert-heading">ไม่พบข้อมูล</h4><p class="mb-0">กรุณาตรวจสอบรหัสพนักงานอีกครั้ง</p></div></div>`; } } catch (error) { displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); } checkinForm.reset(); });
 
