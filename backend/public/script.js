@@ -500,79 +500,73 @@ registrationForm.addEventListener('submit', async (e) => {
         department: document.getElementById('department').value,
         employeeId: document.getElementById('employeeId').value.toUpperCase(),
         isAdmin: isAdminLoggedIn
-    const employeeData = {
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            department: document.getElementById('department').value,
-            employeeId: document.getElementById('employeeId').value.toUpperCase(),
-            isAdmin: isAdminLoggedIn
-        };
+    };
 
-        // Set return path before navigating away or on success
-        returnToSection = registrationSection;
+    // Set return path before navigating away or on success
+    returnToSection = registrationSection;
 
-        try {
-            const res = await fetch(`${API_BASE_URL}/add-employee`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(employeeData)
-            });
-            const result = await res.json();
+    try {
+        const res = await fetch(`${API_BASE_URL}/add-employee`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(employeeData)
+        });
+        const result = await res.json();
 
-            if(res.ok) {
-    if (isAdminLoggedIn) {
-        // กรณี Admin: ให้แจ้งเตือนสำเร็จเฉยๆ (ไม่เปลี่ยนหน้า)
-        displaySuccess("ลงทะเบียนสำเร็จเรียบร้อย");
-        registrationForm.reset();
-    } else {
-        // กรณี User ทั่วไป: ให้เด้งไปหน้าแสดง QR Code
-        navigateTo(resultDiv);
+        if (res.ok) {
+            if (isAdminLoggedIn) {
+                // กรณี Admin: ให้แจ้งเตือนสำเร็จเฉยๆ (ไม่เปลี่ยนหน้า)
+                displaySuccess("ลงทะเบียนสำเร็จเรียบร้อย");
+                registrationForm.reset();
+            } else {
+                // กรณี User ทั่วไป: ให้เด้งไปหน้าแสดง QR Code
+                navigateTo(resultDiv);
 
-        // Show User Info
-        const userData = result.data;
-        const welcomeMsg = translations[localStorage.getItem('language') || 'th'].welcome_message || "ยินดีต้อนรับ";
+                // Show User Info
+                const userData = result.data;
+                const welcomeMsg = translations[localStorage.getItem('language') || 'th'].welcome_message || "ยินดีต้อนรับ";
 
-        document.getElementById('resultMessage').innerHTML = `
+                document.getElementById('resultMessage').innerHTML = `
                     ${welcomeMsg} <br>
                     <span class="text-primary display-6 fw-bold">${userData.first_name} ${userData.last_name}</span><br>
                     <small class="text-muted">${userData.department}</small>
                 `;
-        document.getElementById('resultMessage').classList.remove('text-warning');
-        document.getElementById('resultMessage').classList.add('text-success');
+                document.getElementById('resultMessage').classList.remove('text-warning');
+                document.getElementById('resultMessage').classList.add('text-success');
 
-        document.getElementById('qrCodeContainer').innerHTML = `
+                document.getElementById('qrCodeContainer').innerHTML = `
                     <img src="${result.data.qrCode}" class="img-fluid" alt="QR Code" data-employee-id="${result.data.employeeId}">
                 `;
-        registrationForm.reset();
-    }
+                registrationForm.reset();
+            }
 
-} else if (res.status === 409) {
-    let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
-    if (result.registeredAt) {
-        const dateObj = new Date(result.registeredAt);
-        const dateStr = dateObj.toLocaleString('th-TH', {
-            year: 'numeric', month: 'long', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
-        msg += `\n(เมื่อ: ${dateStr})`;
-    }
-    // Show in result div instead of error toast
-    // Show in result div instead of error toast
-    navigateTo(resultDiv);
-    document.getElementById('resultMessage').innerText = msg; // InnerText handles \n as line break in some containers, but innerHTML with <br> is safer if needed. using innerText with CSS white-space: pre-wrap; is better. But standard h4 might ignore \n.
-    // Using innerHTML for safety
-    document.getElementById('resultMessage').innerHTML = msg.replace(/\n/g, '<br>');
+        } else if (res.status === 409) {
+            let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
+            if (result.registeredAt) {
+                const dateObj = new Date(result.registeredAt);
+                const dateStr = dateObj.toLocaleString('th-TH', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                msg += `\n(เมื่อ: ${dateStr})`;
+            }
+            // Show in result div instead of error toast
+            // Show in result div instead of error toast
+            navigateTo(resultDiv);
+            document.getElementById('resultMessage').innerText = msg; // InnerText handles \n as line break in some containers, but innerHTML with <br> is safer if needed. using innerText with CSS white-space: pre-wrap; is better. But standard h4 might ignore \n.
+            // Using innerHTML for safety
+            document.getElementById('resultMessage').innerHTML = msg.replace(/\n/g, '<br>');
 
-    document.getElementById('resultMessage').classList.remove('text-success');
-    document.getElementById('resultMessage').classList.add('text-warning');
-    document.getElementById('qrCodeContainer').innerHTML = '<div class="text-warning py-3"><i class="fa-solid fa-clock-rotate-left fa-3x"></i></div>';
-    registrationForm.reset();
-} else {
-    displayError(result.error);
-}
+            document.getElementById('resultMessage').classList.remove('text-success');
+            document.getElementById('resultMessage').classList.add('text-warning');
+            document.getElementById('qrCodeContainer').innerHTML = '<div class="text-warning py-3"><i class="fa-solid fa-clock-rotate-left fa-3x"></i></div>';
+            registrationForm.reset();
+        } else {
+            displayError(result.error);
+        }
     } catch (err) {
-    displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-}
+        displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
 });
 
 findForm.addEventListener('submit', async (e) => {
