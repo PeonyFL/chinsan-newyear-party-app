@@ -546,7 +546,13 @@ registrationForm.addEventListener('submit', async (e) => {
                 });
                 msg += `\n(เมื่อ: ${dateStr})`;
             }
-            displayError(msg);
+            // Show in result div instead of error toast
+            navigateTo(resultDiv);
+            document.getElementById('resultMessage').innerText = msg;
+            document.getElementById('resultMessage').classList.remove('text-success');
+            document.getElementById('resultMessage').classList.add('text-warning'); // Use warning color
+            document.getElementById('qrCodeContainer').innerHTML = '<i class="fa-solid fa-circle-check fa-5x text-warning"></i>'; // Show icon instead of QR
+            registrationForm.reset();
         } else {
             displayError(result.error);
         }

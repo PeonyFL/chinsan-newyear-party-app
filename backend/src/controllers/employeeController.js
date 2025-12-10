@@ -51,9 +51,14 @@ exports.addEmployee = async (req, res) => {
 
         if (existingUser) {
             if (!isAdmin) {
-                if (!existingUser.registration_time) {
-                    await client.query("UPDATE employees SET registration_time=NOW() WHERE employee_id=$1", [eid]);
+                if (existingUser.registration_time) {
+                    await client.query('ROLLBACK');
+                    return res.status(409).json({
+                        "error": "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว",
+                        "registeredAt": existingUser.registration_time
+                    });
                 }
+                await client.query("UPDATE employees SET registration_time=NOW() WHERE employee_id=$1", [eid]);
             } else {
                 if (firstName && lastName) {
                     await client.query(
