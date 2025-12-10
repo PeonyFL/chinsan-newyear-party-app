@@ -69,14 +69,26 @@ app.post('/add-employee', async (req, res) => {
     } catch (err) { res.status(500).json({ "error": err.message }); }
 });
 
+// ไฟล์: server.js
+
 app.get('/find/:employeeId', async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM employees WHERE employee_id = $1", [req.params.employeeId.toUpperCase()]);
         const row = result.rows[0];
+        
         if (row) {
-            if (!row.registration_time) {
-                await db.query("UPDATE employees SET registration_time = NOW() WHERE employee_id = $1", [row.employee_id]);
+            // --- ส่วนที่เพิ่มใหม่ เริ่มต้น ---
+            // ถ้ามี registration_time แล้ว (แปลว่าเคยลงทะเบียนรับ QR ไปแล้ว)
+            if (row.registration_time) {
+                return res.status(409).json({ 
+                    "error": "ท่านได้ลงทะเบียนไปแล้ว" 
+                });
             }
+            // --- ส่วนที่เพิ่มใหม่ สิ้นสุด ---
+
+            // ถ้ายังไม่เคยลง (registration_time เป็น null) ให้บันทึกเวลาและสร้าง QR
+            await db.query("UPDATE employees SET registration_time = NOW() WHERE employee_id = $1", [row.employee_id]);
+            
             const qr = await qrcode.toDataURL(row.employee_id, { width: 350, margin: 1 });
             res.status(200).json({
                 "message": "พบข้อมูลแล้ว",
