@@ -467,10 +467,8 @@ adminPasswordForm.addEventListener('submit', (e) => {
 });
 
 // --- Main Application Logic ---
-// ในไฟล์ script.js
 
-// --- ไฟล์ script.js ---
-
+// 1. แก้ไข registrationForm ให้แสดงวันที่เมื่อ Error 409
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -479,7 +477,7 @@ registrationForm.addEventListener('submit', async (e) => {
         lastName: document.getElementById('lastName').value,
         department: document.getElementById('department').value,
         employeeId: document.getElementById('employeeId').value.toUpperCase(),
-        isAdmin: isAdminLoggedIn // ✅ เพิ่มบรรทัดนี้: ส่งสถานะไปบอกว่าใครเป็นคนกด
+        isAdmin: isAdminLoggedIn
     };
     
     try {
@@ -491,7 +489,6 @@ registrationForm.addEventListener('submit', async (e) => {
         const result = await res.json();
         
         if (res.ok) {
-            // ถ้าสำเร็จ ให้แสดง QR Code
             navigateTo(resultDiv);
             document.getElementById('resultMessage').innerText = result.message;
             document.getElementById('qrCodeContainer').innerHTML = `
@@ -499,14 +496,28 @@ registrationForm.addEventListener('submit', async (e) => {
             `;
             registrationForm.reset();
         } else if (res.status === 409) {
-            displayError(result.error); // แจ้งเตือน: ลงทะเบียนไปแล้ว
+            // ✅ แก้ไข: แสดงวันที่ลงทะเบียน (แปลงเป็นรูปแบบไทย)
+            let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
+            if (result.registeredAt) {
+                const dateObj = new Date(result.registeredAt);
+                const dateStr = dateObj.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+                msg += `\n(เมื่อวันที่: ${dateStr})`;
+            }
+            displayError(msg); 
         } else {
-            // กรณี 404 ไม่พบข้อมูลใน Excel (สำหรับ User ทั่วไป)
-            displayError(result.error); 
+            displayError(result.error);
         }
     } catch (err) {
         displayError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
     }
+});
+
+// 2. ตรวจสอบว่า Event Listener สำหรับลิงก์ค้นหาทำงานถูกต้อง (ปกติมีอยู่แล้ว แต่เช็คเพื่อความชัวร์)
+// ปุ่มนี้จะอยู่ในหน้า Registration เพื่อให้กดข้ามไปหน้า Find ได้
+document.getElementById('showFindFormLink').addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    // กดแล้วให้ไปหน้า Find Section
+    navigateTo(findSection); 
 });
 
 findForm.addEventListener('submit', async (e) => { 

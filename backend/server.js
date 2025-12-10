@@ -61,8 +61,9 @@ app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors,
 
 // --- ไฟล์ server.js ---
 
+// --- ไฟล์ server.js ---
+
 app.post('/add-employee', async (req, res) => {
-    // รับค่า isAdmin มาด้วย
     const { firstName, lastName, department, employeeId, isAdmin } = req.body;
     const eid = String(employeeId).toUpperCase();
     
@@ -70,42 +71,38 @@ app.post('/add-employee', async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. เช็คว่ามีรหัสนี้ในระบบไหม
         const checkRes = await client.query("SELECT * FROM employees WHERE employee_id = $1", [eid]);
         const existingUser = checkRes.rows[0];
 
         if (existingUser) {
-            // --- กรณีมีชื่อในระบบแล้ว ---
-            
             if (existingUser.registration_time) {
-                // ถ้าลงทะเบียนไปแล้ว -> แจ้งเตือน
+                // ✅ แก้ไขจุดที่ 1: ส่งวันที่ (registeredAt) กลับไปพร้อมกับ Error 409
                 await client.query('ROLLBACK');
-                return res.status(409).json({ "error": "รหัสพนักงานนี้ ลงทะเบียนเรียบร้อยแล้ว" });
+                return res.status(409).json({ 
+                    "error": "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว",
+                    "registeredAt": existingUser.registration_time 
+                });
             } 
             
-            // ถ้ายังไม่ลงทะเบียน (มีแต่ชื่อจาก Excel) -> อัปเดตข้อมูลและเวลาลงทะเบียน
+            // ... (ส่วน Update กรณี User ลงทะเบียนครั้งแรก หรือ Admin แก้ไข) ...
             await client.query(
                 "UPDATE employees SET first_name=$1, last_name=$2, department=$3, registration_time=NOW() WHERE employee_id=$4",
                 [firstName, lastName, department, eid]
             );
 
         } else {
-            // --- กรณีไม่มีชื่อในระบบ (รหัสใหม่) ---
-
+            // ... (ส่วน Insert ใหม่) ...
             if (isAdmin) {
-                // ✅ ถ้าเป็น Admin: อนุญาตให้เพิ่มพนักงานใหม่ได้
                 await client.query(
                     "INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES ($1, $2, $3, $4, NOW())",
                     [firstName, lastName, department, eid]
                 );
             } else {
-                // ❌ ถ้าเป็น User ทั่วไป: ห้ามเพิ่มเอง ต้องมีใน Excel ก่อน
                 await client.query('ROLLBACK');
                 return res.status(404).json({ "error": "ไม่พบข้อมูลในระบบ (กรุณาติดต่อ Admin เพื่อเพิ่มรายชื่อ)" });
             }
         }
 
-        // สร้าง QR Code ส่งกลับไป (ทั้งกรณี Update และ Insert ของ Admin)
         const qr = await qrcode.toDataURL(eid, { width: 350, margin: 1 });
         await client.query('COMMIT');
 
@@ -113,7 +110,6 @@ app.post('/add-employee', async (req, res) => {
             "message": "ลงทะเบียนสำเร็จ", 
             "data": { qrCode: qr, employeeId: eid } 
         });
-
     } catch (err) {
         await client.query('ROLLBACK');
         res.status(500).json({ "error": err.message });
