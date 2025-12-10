@@ -468,6 +468,8 @@ adminPasswordForm.addEventListener('submit', (e) => {
 
 // --- Main Application Logic ---
 
+// --- ไฟล์ script.js ---
+
 registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -488,6 +490,7 @@ registrationForm.addEventListener('submit', async (e) => {
         const result = await res.json();
         
         if (res.ok) {
+            // กรณีลงทะเบียนสำเร็จครั้งแรก
             navigateTo(resultDiv);
             document.getElementById('resultMessage').innerText = result.message;
             document.getElementById('qrCodeContainer').innerHTML = `
@@ -495,17 +498,23 @@ registrationForm.addEventListener('submit', async (e) => {
             `;
             registrationForm.reset();
         } else if (res.status === 409) {
-            // ✅ Requirement 1: แสดงวันที่ลงทะเบียน (ถ้ามี)
-            let msg = "ท่านลงทะเบียนเรียบร้อยแล้ว";
+            // ✅ แก้ไขตรงนี้: แสดงข้อความแจ้งเตือน + วันที่
+            let msg = "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว";
+            
             if (result.registeredAt) {
                 const dateObj = new Date(result.registeredAt);
+                // แปลงเป็นรูปแบบไทย เช่น: 10 ธันวาคม 2568 เวลา 10:30
                 const dateStr = dateObj.toLocaleString('th-TH', { 
-                    year: 'numeric', month: 'long', day: 'numeric', 
-                    hour: '2-digit', minute: '2-digit' 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
                 });
                 msg += `\n(เมื่อ: ${dateStr})`;
             }
-            displayError(msg); 
+            
+            displayError(msg); // แสดงแถบสีแดงแจ้งเตือน
         } else {
             displayError(result.error);
         }

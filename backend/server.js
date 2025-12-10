@@ -63,6 +63,8 @@ app.post('/upload-employees', upload.single('employeeFile'), handleUploadErrors,
 
 // --- ไฟล์ server.js ---
 
+// --- ไฟล์ server.js ---
+
 app.post('/add-employee', async (req, res) => {
     const { firstName, lastName, department, employeeId, isAdmin } = req.body;
     const eid = String(employeeId).toUpperCase();
@@ -78,22 +80,22 @@ app.post('/add-employee', async (req, res) => {
             // --- กรณีมีชื่อในระบบแล้ว ---
 
             if (existingUser.registration_time) {
-                // ✅ Requirement 1: ถ้าลงทะเบียนแล้ว ให้ส่ง Error 409 พร้อมวันที่
+                // ✅ แก้ไขตรงนี้: กลับมาส่ง Error 409 พร้อมแนบเวลา (registeredAt)
                 await client.query('ROLLBACK');
                 return res.status(409).json({ 
                     "error": "รหัสพนักงานนี้ ลงทะเบียนไปแล้ว",
-                    "registeredAt": existingUser.registration_time // ส่งเวลาไปด้วย
+                    "registeredAt": existingUser.registration_time 
                 });
             } 
             
-            // ถ้ายังไม่ลงทะเบียน -> อัปเดตข้อมูล
+            // ... (ส่วนอัปเดตข้อมูล กรณีลงทะเบียนครั้งแรกจาก Excel) ...
             await client.query(
                 "UPDATE employees SET first_name=$1, last_name=$2, department=$3, registration_time=NOW() WHERE employee_id=$4",
                 [firstName, lastName, department, eid]
             );
 
         } else {
-            // --- กรณีไม่มีชื่อในระบบ ---
+            // ... (ส่วน Insert ใหม่) ...
             if (isAdmin) {
                 await client.query(
                     "INSERT INTO employees (first_name, last_name, department, employee_id, registration_time) VALUES ($1, $2, $3, $4, NOW())",
