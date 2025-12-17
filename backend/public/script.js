@@ -52,7 +52,8 @@ const translations = {
         status_sport_day: "✔️ Sport Day Registered",
         status_checked_in: "✔️ Checked-in to Event",
         status_all_three: "⭐ All Conditions Met (Eligible for Draw)",
-        add_employee_button: "Add New Employee (Manual)"
+        add_employee_button: "Add New Employee (Manual)",
+        save_qr_line_instruction: "For LINE users: Please long-press the image and select 'Save Image'."
     },
     th: {
         page_title: "Chinsan New Year Party 2026", role_selection_title: "กรุณาเลือกบทบาทของคุณ", employee_button: "พนักงาน (งานปีใหม่)",
@@ -103,7 +104,8 @@ const translations = {
         status_sport_day: "✔️ ลงทะเบียนกีฬาสี",
         status_checked_in: "✔️ เช็คอินเข้างาน",
         status_all_three: "⭐ ครบทุกเงื่อนไข (มีสิทธิ์สุ่มรางวัล)",
-        add_employee_button: "เพิ่มพนักงาน (กรอกเอง)"
+        add_employee_button: "เพิ่มพนักงาน (กรอกเอง)",
+        save_qr_line_instruction: "สำหรับผู้ใช้ LINE: กรุณากดค้างที่รูปภาพ และเลือก 'บันทึกรูปภาพ' (Save Image)"
     }
 };
 
@@ -448,6 +450,14 @@ document.getElementById('showVotePageBtn').addEventListener('click', showVotePag
 document.getElementById('backFromVoteBtn').addEventListener('click', () => navigateTo(registrationSection));
 document.getElementById('confirm-export-btn').addEventListener('click', exportToExcel);
 document.getElementById('saveQrBtn').addEventListener('click', () => {
+    // Detect LINE In-App Browser
+    const isLine = /Line/i.test(navigator.userAgent);
+    if (isLine) {
+        const currentLang = localStorage.getItem('language') || 'th';
+        alert(translations[currentLang].save_qr_line_instruction);
+        return;
+    }
+
     const qrImg = document.querySelector('#qrCodeContainer img');
     if (qrImg) {
         const employeeId = qrImg.dataset.employeeId || 'event_qr';
