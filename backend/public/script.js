@@ -954,15 +954,33 @@ async function waiveCurrentWinner() {
     if (currentWinnerIndex <= 0) return; // Should not happen if modal is open usually
     const waivedIdx = currentWinnerIndex - 1;
 
-    // Filter eligible candidates who are NOT already winners
+    // 1. Fetch Latest Employees to ensure status is up-to-date
+    drawElements.waiveBtn.disabled = true;
+    drawElements.waiveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังดึงข้อมูล...';
+    try {
+        const empRes = await fetch(`${API_BASE_URL}/employees`);
+        if (empRes.ok) {
+            allEmployees = (await empRes.json()).data;
+        }
+    } catch (e) {
+        console.error("Failed to refresh employees:", e);
+    } finally {
+        drawElements.waiveBtn.innerText = 'สละสิทธิ์แล้วสุ่มใหม่';
+        drawElements.waiveBtn.disabled = false;
+    }
+
+    // 2. Filter eligible candidates who are NOT already winners
     // Criteria: Checked In AND Sport Day Registered AND Registration != null
+    // AND Not in allWinners (comparing employee_id)
     const eligible = allEmployees.filter(e =>
         e.checked_in && e.sport_day_registered && e.registration_time &&
         !allWinners.find(w => w.employee_id === e.employee_id)
     );
 
     if (eligible.length === 0) {
-        alert("ไม่มีพนักงานที่มีสิทธิ์รับรางวัลเหลือแล้ว");
+        const totalEligible = allEmployees.filter(e => e.checked_in && e.sport_day_registered && e.registration_time).length;
+        const totalWinners = allWinners.length;
+        alert(`ไม่มีพนักงานที่มีสิทธิ์รับรางวัลเหลือแล้ว\n(ผู้มีสิทธิ์ทั้งหมด: ${totalEligible} คน, ถูกล็อกไว้รับรางวัลแล้ว: ${totalWinners} คน)`);
         return;
     }
 
