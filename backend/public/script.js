@@ -847,9 +847,7 @@ async function showDrawPage() {
                     for (let i = 0; i < currentWinnerIndex; i++) {
                         const w = allWinners[i];
                         const p = prizes[i];
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        li.innerHTML = `<span>${p || 'รางวัลพิเศษ'}</span>: <span class="winner-name">${w.first_name} ${w.last_name}</span> (รหัส: ${w.employee_id})`;
+                        const li = createWinnerListItem(w, p || 'รางวัลพิเศษ', i);
                         drawElements.winnersList.appendChild(li);
                     }
                 }
@@ -986,12 +984,89 @@ async function runSingleDrawAnimation(winner, animationTime) {
     const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')).map(li => li.innerText);
     const prize = prizes[currentWinnerIndex];
     drawElements.winnersContainer.classList.remove('d-none');
-    const li = document.createElement('li');
-    li.className = 'list-group-item';
-    li.innerHTML = `<span>${prize || 'รางวัลพิเศษ'}</span>: <span class="winner-name">${winner.first_name} ${winner.last_name}</span> (รหัส: ${winner.employee_id})`;
+    const li = createWinnerListItem(winner, prize || 'รางวัลพิเศษ', currentWinnerIndex);
     drawElements.winnersList.appendChild(li);
     showWinnerPopup(winner, prize || 'รางวัลพิเศษ');
-    showWinnerPopup(winner, prize || 'รางวัลพิเศษ');
+}
+
+function createWinnerListItem(winner, prizeName, index) {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.innerHTML = `
+        <div>
+            <span class="fw-bold text-primary">${prizeName}</span>: 
+            <span class="winner-name">${winner.first_name} ${winner.last_name}</span> 
+            <small class="text-muted">(รหัส: ${winner.employee_id})</small>
+        </div>
+        <button class="btn btn-sm btn-outline-danger waive-winner-btn" data-index="${index}">สละสิทธิ์</button>
+    `;
+    return li;
+}
+
+drawElements.winnersList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('waive-winner-btn')) {
+        const index = parseInt(e.target.dataset.index);
+        if (confirm("ยืนยันการสละสิทธิ์สำหรับผู้โชคดีท่านนี้? (ระบบจะสุ่มคนใหม่มาแทนทันที)")) {
+            waiveWinnerAtIndex(index);
+        }
+    }
+});
+
+async function waiveWinnerAtIndex(index) {
+    const winner = allWinners[index];
+    if (!winner) return;
+
+    // Add to excluded
+    excludedEmployeeIds.add(winner.employee_id);
+
+    // Find Replacement
+    // Exclude current winners (active ones) minus the one we are removing? 
+    // Actually, 'allWinners' contains everyone scheduled. 
+    // We should look at who is 'active' up to currentWinnerIndex.
+    // AND we must ensure we don't pick someone who is *already* a winner in another slot (unlikely if unique, but safe to check).
+
+    // We only care about replacing THIS slot.
+    // The pool is: Everyone eligible MINUS (Winners[0..currentWinnerIndex-1] excluding 'index') MINUS Excluded
+
+    // Note: If we are replacing a past winner, 'currentWinnerIndex' might be far ahead.
+    // We should strictly look at "Currently Active Winners" being the list of people who hold prizes.
+    // That is basically 'allWinners[0...currentWinnerIndex-1]'.
+
+    const activeWinners = allWinners.slice(0, currentWinnerIndex).filter((_, i) => i !== index);
+
+    const eligible = allEmployees.filter(e =>
+        e.checked_in && e.sport_day_registered && e.registration_time &&
+        !activeWinners.find(w => w.employee_id === e.employee_id) &&
+        !excludedEmployeeIds.has(e.employee_id)
+    );
+
+    if (eligible.length === 0) {
+        alert("ไม่เหลือพนักงานที่มีสิทธิ์รับรางวัลแล้ว!");
+        // Revert exclusion?
+        excludedEmployeeIds.delete(winner.employee_id);
+        return;
+    }
+
+    const newWinner = eligible[Math.floor(Math.random() * eligible.length)];
+    allWinners[index] = newWinner;
+
+    // Update DOM
+    // Re-render the specific item
+    const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')).map(li => li.innerText); // Re-read prizes to be safe (or pass it in?)
+    // Prize name might be tricky if we don't have it easily. 
+    // But we know the index corresponds to 'prizes[index]' usually.
+    // Let's grab the prize name from valid source.
+    const prizeName = prizes[index] || 'รางวัลพิเศษ';
+
+    // Find the LI
+    const items = drawElements.winnersList.querySelectorAll('li');
+    if (items[index]) {
+        const newLi = createWinnerListItem(newWinner, prizeName, index);
+        drawElements.winnersList.replaceChild(newLi, items[index]);
+    }
+
+    saveDrawState();
+    displaySuccess(`เปลี่ยนผู้โชคดีเป็น: ${newWinner.first_name} ${newWinner.last_name}`);
 }
 drawElements.waiveBtn.addEventListener('click', waiveCurrentWinner);
 
