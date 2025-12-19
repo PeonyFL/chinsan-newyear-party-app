@@ -950,7 +950,7 @@ async function runSingleDrawAnimation(winner, animationTime) {
 }
 drawElements.waiveBtn.addEventListener('click', waiveCurrentWinner);
 
-function waiveCurrentWinner() {
+async function waiveCurrentWinner() {
     if (currentWinnerIndex <= 0) return; // Should not happen if modal is open usually
     const waivedIdx = currentWinnerIndex - 1;
 
@@ -970,19 +970,30 @@ function waiveCurrentWinner() {
 
     // Update data
     allWinners[waivedIdx] = newWinner;
-    currentWinnerIndex--; // Backtrack one step
+
+    // Decrease index to "re-draw" this slot
+    currentWinnerIndex--;
 
     // Update UI
     if (drawElements.winnersList.lastElementChild) {
         drawElements.winnersList.removeChild(drawElements.winnersList.lastElementChild);
     }
-    updatePrizeDisplay(); // Highlight correct prize again
+    drawElements.modal.hide();
+
+    // Trigger immediate redraw
+    const time = (parseInt(drawElements.drawTimeInput.value) || 3) * 1000;
+    updatePrizeDisplay(); // Highlight current prize
+
+    // Disable controls
+    drawElements.nextBtn.disabled = true;
+
+    await runSingleDrawAnimation(newWinner, time);
+
+    // Advance index and save state
+    currentWinnerIndex++;
     saveDrawState();
 
     drawElements.nextBtn.disabled = false;
-    drawElements.modal.hide();
-
-    // Optional: Auto-start next draw? No, let user click "Draw" again for suspense.
 }
 
 function updatePrizeDisplay() { const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')); prizes.forEach(li => li.classList.remove('drawing-now')); if (currentWinnerIndex < prizes.length) { prizes[currentWinnerIndex].classList.add('drawing-now'); drawElements.currentPrize.innerText = prizes[currentWinnerIndex].innerText; } }
