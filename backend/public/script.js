@@ -962,6 +962,23 @@ drawElements.resetBtn.addEventListener('click', () => {
     localStorage.removeItem('drawState');
     showDrawPage();
 });
+
+// Manual Reset Button Logic
+const manualResetBtn = document.getElementById('manualResetBtn');
+if (manualResetBtn) {
+    manualResetBtn.addEventListener('click', () => {
+        const lang = localStorage.getItem('language') || 'th';
+        const confirmMsg = lang === 'th'
+            ? "คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตการจับรางวัลใหม่ทั้งหมด? (ข้อมูลผู้โชคดีจะหายไป)"
+            : "Are you sure you want to reset the entire draw? (All winners will be lost)";
+
+        if (confirm(confirmMsg)) {
+            localStorage.removeItem('drawState');
+            showDrawPage();
+        }
+    });
+}
+
 function saveDrawState() {
     const state = {
         winners: allWinners,
