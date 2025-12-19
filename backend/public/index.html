@@ -282,8 +282,12 @@
                 </div>
 
                 <div id="draw-section" class="d-none text-center">
-                    <div class="d-grid mb-3"><button type="button" id="backFromDrawBtn" class="btn btn-secondary"
-                            data-key="back_to_main_button">กลับไปหน้าหลัก</button></div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <button type="button" id="backFromDrawBtn" class="btn btn-secondary"
+                            data-key="back_to_main_button">กลับไปหน้าหลัก</button>
+                        <button type="button" id="manualResetBtn" class="btn btn-outline-danger"
+                            data-key="manual_reset_button">ล้างข้อมูลและเริ่มใหม่ทั้งหมด (Reset)</button>
+                    </div>
                     <div id="draw-setup">
                         <h1 class="h3 mb-3 fw-bold border-bottom pb-3" data-key="draw_title">จับรางวัลผู้โชคดี</h1>
                         <div class="row mb-3"></div>
@@ -328,8 +332,7 @@
                                     data-key="draw_next_button">สุ่มรางวัล!</button>
                                 <button type="button" id="resetDrawBtn" class="btn btn-secondary d-none"
                                     data-key="reset_draw_button">เริ่มการสุ่มใหม่</button>
-                                <button type="button" id="manualResetBtn" class="btn btn-outline-danger mt-2"
-                                    data-key="manual_reset_button">ล้างข้อมูลและเริ่มใหม่ทั้งหมด (Reset)</button>
+
                             </div>
                         </div>
                     </div>
