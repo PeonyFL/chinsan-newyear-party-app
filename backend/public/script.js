@@ -790,6 +790,7 @@ const drawElements = {
     modalPrize: document.getElementById('modal-prize-name'),
     modalWinner: document.getElementById('modal-winner-name'),
     modalId: document.getElementById('modal-winner-id'),
+    waiveBtn: document.getElementById('waiveWinnerBtn'),
     drawTimeInput: document.getElementById('drawTimeInput'),
     drawCountInput: document.getElementById('drawCountInput')
 };
@@ -817,6 +818,47 @@ async function showDrawPage() {
     drawElements.startBtn.disabled = false;
     drawElements.startBtn.innerText = translations[localStorage.getItem('language') || 'th']['start_draw_button'];
     await loadPrizesToDisplay();
+    // Check for saved state
+    const savedState = localStorage.getItem('drawState');
+    if (savedState) {
+        try {
+            const state = JSON.parse(savedState);
+            if (state.winners && state.employees && state.winnerIndex !== undefined && state.winnerIndex < state.winners.length) {
+                // Restore state
+                allWinners = state.winners;
+                allEmployees = state.employees;
+                currentWinnerIndex = state.winnerIndex;
+
+                drawElements.setup.classList.add('d-none');
+                drawElements.animationArea.classList.remove('d-none');
+                drawElements.winnersList.innerHTML = '';
+                drawElements.winnersContainer.classList.add('d-none'); // Hide initially, show if needed logic below?
+
+                // Re-render previous winners
+                if (currentWinnerIndex > 0) {
+                    drawElements.winnersContainer.classList.remove('d-none');
+                    const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')).map(li => li.innerText);
+                    for (let i = 0; i < currentWinnerIndex; i++) {
+                        const w = allWinners[i];
+                        const p = prizes[i];
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.innerHTML = `<span>${p || 'รางวัลพิเศษ'}</span>: <span class="winner-name">${w.first_name} ${w.last_name}</span> (รหัส: ${w.employee_id})`;
+                        drawElements.winnersList.appendChild(li);
+                    }
+                }
+
+                drawElements.nextBtn.disabled = false;
+                drawElements.nextBtn.classList.remove('d-none');
+                drawElements.resetBtn.classList.add('d-none');
+                updatePrizeDisplay();
+                return; // Skip default setup
+            }
+        } catch (e) {
+            console.error("Error parsing saved state", e);
+            localStorage.removeItem('drawState');
+        }
+    }
 }
 drawElements.startBtn.addEventListener('click', setupNewDraw);
 async function setupNewDraw() {
@@ -842,6 +884,7 @@ async function setupNewDraw() {
         drawElements.nextBtn.classList.remove('d-none');
         drawElements.resetBtn.classList.add('d-none');
         updatePrizeDisplay();
+        saveDrawState(); // Save initial state
     } catch (err) {
         displayError(err.message);
         drawElements.startBtn.disabled = false;
@@ -862,6 +905,7 @@ drawElements.nextBtn.addEventListener('click', async () => {
         const winner = allWinners[currentWinnerIndex];
         await runSingleDrawAnimation(winner, time);
         currentWinnerIndex++;
+        saveDrawState(); // Save progress
     }
     if (currentWinnerIndex < allWinners.length) {
         updatePrizeDisplay();
@@ -872,7 +916,18 @@ drawElements.nextBtn.addEventListener('click', async () => {
         drawElements.currentPrize.innerText = "จับรางวัลครบแล้ว!";
     }
 });
-drawElements.resetBtn.addEventListener('click', () => { showDrawPage(); });
+drawElements.resetBtn.addEventListener('click', () => {
+    localStorage.removeItem('drawState');
+    showDrawPage();
+});
+function saveDrawState() {
+    const state = {
+        winners: allWinners,
+        employees: allEmployees,
+        winnerIndex: currentWinnerIndex
+    };
+    localStorage.setItem('drawState', JSON.stringify(state));
+}
 async function runSingleDrawAnimation(winner, animationTime) {
     const shuffle = setInterval(() => {
         const rand = allEmployees[Math.floor(Math.random() * allEmployees.length)];
@@ -891,7 +946,45 @@ async function runSingleDrawAnimation(winner, animationTime) {
     li.innerHTML = `<span>${prize || 'รางวัลพิเศษ'}</span>: <span class="winner-name">${winner.first_name} ${winner.last_name}</span> (รหัส: ${winner.employee_id})`;
     drawElements.winnersList.appendChild(li);
     showWinnerPopup(winner, prize || 'รางวัลพิเศษ');
+    showWinnerPopup(winner, prize || 'รางวัลพิเศษ');
 }
+drawElements.waiveBtn.addEventListener('click', waiveCurrentWinner);
+
+function waiveCurrentWinner() {
+    if (currentWinnerIndex <= 0) return; // Should not happen if modal is open usually
+    const waivedIdx = currentWinnerIndex - 1;
+
+    // Filter eligible candidates who are NOT already winners
+    // Criteria: Checked In AND Sport Day Registered AND Registration != null
+    const eligible = allEmployees.filter(e =>
+        e.checked_in && e.sport_day_registered && e.registration_time &&
+        !allWinners.find(w => w.employee_id === e.employee_id)
+    );
+
+    if (eligible.length === 0) {
+        alert("ไม่มีพนักงานที่มีสิทธิ์รับรางวัลเหลือแล้ว");
+        return;
+    }
+
+    const newWinner = eligible[Math.floor(Math.random() * eligible.length)];
+
+    // Update data
+    allWinners[waivedIdx] = newWinner;
+    currentWinnerIndex--; // Backtrack one step
+
+    // Update UI
+    if (drawElements.winnersList.lastElementChild) {
+        drawElements.winnersList.removeChild(drawElements.winnersList.lastElementChild);
+    }
+    updatePrizeDisplay(); // Highlight correct prize again
+    saveDrawState();
+
+    drawElements.nextBtn.disabled = false;
+    drawElements.modal.hide();
+
+    // Optional: Auto-start next draw? No, let user click "Draw" again for suspense.
+}
+
 function updatePrizeDisplay() { const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')); prizes.forEach(li => li.classList.remove('drawing-now')); if (currentWinnerIndex < prizes.length) { prizes[currentWinnerIndex].classList.add('drawing-now'); drawElements.currentPrize.innerText = prizes[currentWinnerIndex].innerText; } }
 function showWinnerPopup(winner, prize) { drawElements.modalPrize.innerText = prize; drawElements.modalWinner.innerText = `${winner.first_name} ${winner.last_name}`; drawElements.modalId.innerText = `(รหัส: ${winner.employee_id})`; drawElements.modal.show(); }
 
@@ -1294,7 +1387,7 @@ async function exportToExcel() {
         if (exportWinners) {
             const w = results[i++].data; const p = results[i++].data.map(x => x.name);
             if (w && p) {
-                const sheet = XLSX.utils.json_to_sheet(w.map((e, idx) => ({ 'รางวัล': p[idx] || 'Prize', 'ผู้รับ': e.first_name + ' ' + e.last_name })));
+                const sheet = XLSX.utils.json_to_sheet(w.map((e, idx) => ({ 'รางวัล': p[idx] || 'Prize', 'ผู้รับ': e.first_name + ' ' + e.last_name, 'รหัสพนักงาน': e.employee_id })));
                 XLSX.utils.book_append_sheet(wb, sheet, "Winners");
             }
         }
