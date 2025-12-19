@@ -1016,22 +1016,16 @@ async function waiveWinnerAtIndex(index) {
     const winner = allWinners[index];
     if (!winner) return;
 
-    // Add to excluded
+    // Use smooth scroll to top
+    // drawElements.animationArea.scrollIntoView({ behavior: 'smooth' });
+    // Or just window scroll if it's the main thing
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 1. Logic: Exclude old winner
     excludedEmployeeIds.add(winner.employee_id);
 
-    // Find Replacement
-    // Exclude current winners (active ones) minus the one we are removing? 
-    // Actually, 'allWinners' contains everyone scheduled. 
-    // We should look at who is 'active' up to currentWinnerIndex.
-    // AND we must ensure we don't pick someone who is *already* a winner in another slot (unlikely if unique, but safe to check).
-
-    // We only care about replacing THIS slot.
-    // The pool is: Everyone eligible MINUS (Winners[0..currentWinnerIndex-1] excluding 'index') MINUS Excluded
-
-    // Note: If we are replacing a past winner, 'currentWinnerIndex' might be far ahead.
-    // We should strictly look at "Currently Active Winners" being the list of people who hold prizes.
-    // That is basically 'allWinners[0...currentWinnerIndex-1]'.
-
+    // 2. Logic: Find Replacement
+    // The pool is active winners (0..currentWinnerIndex-1) excluding the one we are removing
     const activeWinners = allWinners.slice(0, currentWinnerIndex).filter((_, i) => i !== index);
 
     const eligible = allEmployees.filter(e =>
@@ -1042,30 +1036,48 @@ async function waiveWinnerAtIndex(index) {
 
     if (eligible.length === 0) {
         alert("ไม่เหลือพนักงานที่มีสิทธิ์รับรางวัลแล้ว!");
-        // Revert exclusion?
-        excludedEmployeeIds.delete(winner.employee_id);
+        excludedEmployeeIds.delete(winner.employee_id); // Revert
         return;
     }
 
     const newWinner = eligible[Math.floor(Math.random() * eligible.length)];
     allWinners[index] = newWinner;
 
-    // Update DOM
-    // Re-render the specific item
-    const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')).map(li => li.innerText); // Re-read prizes to be safe (or pass it in?)
-    // Prize name might be tricky if we don't have it easily. 
-    // But we know the index corresponds to 'prizes[index]' usually.
-    // Let's grab the prize name from valid source.
+    // 3. UI: Update Slot Machine Text
+    const prizes = Array.from(drawElements.prizeList.querySelectorAll('li')).map(li => li.innerText);
     const prizeName = prizes[index] || 'รางวัลพิเศษ';
+    drawElements.currentPrize.innerText = `กำลังสุ่มใหม่: ${prizeName}`;
 
-    // Find the LI
+    // 4. Animation (Re-used from runSingleDrawAnimation logic)
+    const animationTime = (parseInt(drawElements.drawTimeInput.value) || 3) * 1000;
+
+    // Start Shuffle
+    const shuffle = setInterval(() => {
+        const rand = allEmployees[Math.floor(Math.random() * allEmployees.length)];
+        drawElements.slotName.innerText = `${rand.first_name} ${rand.last_name}`;
+        drawElements.slotId.innerText = rand.employee_id;
+    }, 50);
+
+    // Wait for animation
+    await new Promise(res => setTimeout(res, animationTime));
+    clearInterval(shuffle);
+
+    // 5. Update Big Display
+    drawElements.slotName.innerText = `${newWinner.first_name} ${newWinner.last_name}`;
+    drawElements.slotId.innerText = newWinner.employee_id;
+
+    // 6. Update List Item
     const items = drawElements.winnersList.querySelectorAll('li');
     if (items[index]) {
         const newLi = createWinnerListItem(newWinner, prizeName, index);
         drawElements.winnersList.replaceChild(newLi, items[index]);
     }
 
+    // 7. Save and Popup
     saveDrawState();
+    // Optional: Show popup? User said "Show big name", then "List changes". 
+    // Usually draw ends with popup. Let's do it for consistency.
+    showWinnerPopup(newWinner, prizeName);
     displaySuccess(`เปลี่ยนผู้โชคดีเป็น: ${newWinner.first_name} ${newWinner.last_name}`);
 }
 drawElements.waiveBtn.addEventListener('click', waiveCurrentWinner);
