@@ -9,7 +9,7 @@ exports.drawPrizes = async (req, res) => {
         const sql = `SELECT id, first_name, last_name, employee_id, department FROM employees WHERE checked_in = TRUE AND sport_day_registered = TRUE AND registration_time IS NOT NULL`;
         const { rows } = await pool.query(sql);
 
-        if (rows.length < winnersNeeded) return res.status(400).json({ "error": "ผู้มีสิทธิ์น้อยกว่าจำนวนรางวัล" });
+        // if (rows.length < winnersNeeded) return res.status(400).json({ "error": "ผู้มีสิทธิ์น้อยกว่าจำนวนรางวัล" });
 
         for (let i = rows.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
