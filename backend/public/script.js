@@ -166,6 +166,7 @@ let allEmployeeData = [];
 let realtimeIntervalId = null;
 let currentVotingEmployeeId = null;
 let voteCountdownIntervalId = null;
+let excludedEmployeeIds = new Set();
 let adminVoteCountdownIntervalId = null;
 let voteStatusPollIntervalId = null;
 let isAdminLoggedIn = false;
@@ -828,6 +829,11 @@ async function showDrawPage() {
                 allWinners = state.winners;
                 allEmployees = state.employees;
                 currentWinnerIndex = state.winnerIndex;
+                if (state.excluded) {
+                    excludedEmployeeIds = new Set(state.excluded);
+                } else {
+                    excludedEmployeeIds = new Set();
+                }
 
                 drawElements.setup.classList.add('d-none');
                 drawElements.animationArea.classList.remove('d-none');
@@ -876,6 +882,7 @@ async function setupNewDraw() {
         allEmployees = (await empRes.json()).data;
         if (allEmployees.length === 0) throw new Error('ยังไม่มีข้อมูลพนักงาน');
         currentWinnerIndex = 0;
+        excludedEmployeeIds.clear();
         drawElements.setup.classList.add('d-none');
         drawElements.animationArea.classList.remove('d-none');
         drawElements.winnersList.innerHTML = '';
@@ -901,6 +908,43 @@ drawElements.nextBtn.addEventListener('click', async () => {
             drawElements.currentPrize.innerText = "จับรางวัลครบแล้ว!";
             break;
         }
+
+        // Logic 2 & 3: Check eligibility before drawing
+        // If the current scheduled winner is already a winner OR excluded, find a replacement.
+        let candidate = allWinners[currentWinnerIndex];
+        const pastWinners = allWinners.slice(0, currentWinnerIndex);
+        const isAlreadyWinner = pastWinners.some(w => w.employee_id === candidate.employee_id);
+        const isExcluded = excludedEmployeeIds.has(candidate.employee_id);
+
+        if (isAlreadyWinner || isExcluded) {
+            // Find replacement
+            // Criteria: Checked In AND Sport Day AND Reg AND Not Already Winner AND Not Excluded
+            const eligiblePool = allEmployees.filter(e =>
+                e.checked_in && e.sport_day_registered && e.registration_time &&
+                !pastWinners.some(w => w.employee_id === e.employee_id) &&
+                !excludedEmployeeIds.has(e.employee_id)
+            );
+
+            if (eligiblePool.length === 0) {
+                // No one left! Stop drawing.
+                drawElements.currentPrize.innerText = "ผู้มีสิทธิ์รับรางวัลหมดแล้ว!";
+                drawElements.nextBtn.disabled = true;
+                drawElements.resetBtn.classList.remove('d-none');
+
+                // If we are mid-loop (conceptually), we basically stop here.
+                // We shouldn't increment currentWinnerIndex if we didn't draw.
+                // But the UI needs to show we are done.
+                // Let's break and ensure the 'allTokens' logic ends.
+                currentWinnerIndex = allWinners.length; // Force end state
+                break;
+            }
+
+            // Pick random replacement
+            const newWinner = eligiblePool[Math.floor(Math.random() * eligiblePool.length)];
+            allWinners[currentWinnerIndex] = newWinner;
+            candidate = newWinner;
+        }
+
         updatePrizeDisplay();
         const winner = allWinners[currentWinnerIndex];
         await runSingleDrawAnimation(winner, time);
@@ -924,7 +968,8 @@ function saveDrawState() {
     const state = {
         winners: allWinners,
         employees: allEmployees,
-        winnerIndex: currentWinnerIndex
+        winnerIndex: currentWinnerIndex,
+        excluded: Array.from(excludedEmployeeIds)
     };
     localStorage.setItem('drawState', JSON.stringify(state));
 }
@@ -969,18 +1014,32 @@ async function waiveCurrentWinner() {
         drawElements.waiveBtn.disabled = false;
     }
 
-    // 2. Filter eligible candidates who are NOT already winners
+    // 2. Filter eligible candidates who are NOT already winners (up to this point) AND not excluded
+    // Logic 1: Pick new regardless of prize count (just need SOMEONE eligible)
     // Criteria: Checked In AND Sport Day Registered AND Registration != null
-    // AND Not in allWinners (comparing employee_id)
+    // AND Not in *Active* Winners (0 to currentWinnerIndex-1, excluding the slot we are waiving)
+    // NOTE: passing 'candidate' who is scheduled for a FUTURE slot is OK (we catch them later).
+
+    // Add current to excluded
+    const currentWinner = allWinners[waivedIdx];
+    excludedEmployeeIds.add(currentWinner.employee_id);
+
+    const activeWinners = allWinners.slice(0, currentWinnerIndex).filter((_, i) => i !== waivedIdx);
+
     const eligible = allEmployees.filter(e =>
         e.checked_in && e.sport_day_registered && e.registration_time &&
-        !allWinners.find(w => w.employee_id === e.employee_id)
+        !activeWinners.find(w => w.employee_id === e.employee_id) &&
+        !excludedEmployeeIds.has(e.employee_id)
     );
 
     if (eligible.length === 0) {
-        const totalEligible = allEmployees.filter(e => e.checked_in && e.sport_day_registered && e.registration_time).length;
-        const totalWinners = allWinners.length;
-        alert(`ไม่มีพนักงานที่มีสิทธิ์รับรางวัลเหลือแล้ว\n(ผู้มีสิทธิ์ทั้งหมด: ${totalEligible} คน, ถูกล็อกไว้รับรางวัลแล้ว: ${totalWinners} คน)`);
+        alert(`ไม่มีพนักงานที่มีสิทธิ์รับรางวัลเหลือแล้ว`);
+        // We added to excluded, but we can't replace.
+        // Revert exclusion? Or leave it empty?
+        // User implied "Stop".
+        // Let's revert the exclusion so they stay as the 'winner' on UI or nullify?
+        // Current UI shows them. If we return, nothing changes.
+        excludedEmployeeIds.delete(currentWinner.employee_id);
         return;
     }
 
