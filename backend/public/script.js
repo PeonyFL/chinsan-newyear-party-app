@@ -824,7 +824,7 @@ async function showDrawPage() {
     if (savedState) {
         try {
             const state = JSON.parse(savedState);
-            if (state.winners && state.employees && state.winnerIndex !== undefined && state.winnerIndex < state.winners.length) {
+            if (state.winners && state.employees && state.winnerIndex !== undefined && state.winnerIndex <= state.winners.length) {
                 // Restore state
                 allWinners = state.winners;
                 allEmployees = state.employees;
@@ -852,9 +852,15 @@ async function showDrawPage() {
                     }
                 }
 
-                drawElements.nextBtn.disabled = false;
-                drawElements.nextBtn.classList.remove('d-none');
-                drawElements.resetBtn.classList.add('d-none');
+                if (currentWinnerIndex >= allWinners.length) {
+                    drawElements.nextBtn.classList.add('d-none');
+                    drawElements.resetBtn.classList.remove('d-none');
+                    drawElements.currentPrize.innerText = "จับรางวัลครบแล้ว!";
+                } else {
+                    drawElements.nextBtn.disabled = false;
+                    drawElements.nextBtn.classList.remove('d-none');
+                    drawElements.resetBtn.classList.add('d-none');
+                }
                 updatePrizeDisplay();
                 return; // Skip default setup
             }
