@@ -1555,7 +1555,16 @@ async function exportToExcel() {
         const exportVotes = document.getElementById('export-votes-check').checked;
         const promises = [];
         if (exportEmployees) promises.push(fetch(`${API_BASE_URL}/employees`).then(res => res.json()));
-        if (exportWinners) { promises.push(fetch(`${API_BASE_URL}/draw`).then(res => res.json().catch(() => ({ data: [] })))); promises.push(fetch(`${API_BASE_URL}/prizes`).then(res => res.json())); }
+        if (exportWinners) {
+            let currentWinners = allWinners;
+            if ((!currentWinners || currentWinners.length === 0) && localStorage.getItem('drawState')) {
+                try {
+                    currentWinners = JSON.parse(localStorage.getItem('drawState')).winners || [];
+                } catch (e) { }
+            }
+            promises.push(Promise.resolve({ data: currentWinners }));
+            promises.push(fetch(`${API_BASE_URL}/prizes`).then(res => res.json()));
+        }
         if (exportVotes) promises.push(fetch(`${API_BASE_URL}/results`).then(res => res.json()));
 
         const results = await Promise.all(promises);
